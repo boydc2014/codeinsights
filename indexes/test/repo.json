@@ -1,0 +1,30 @@
+{
+    "name": "Intercom",
+    "path": "c:/intercom",
+    "solutions": [
+        {
+            "name": "TestBot.sln",
+            "path": "Intercom/Testbot.sln",
+            "projects": [
+                {
+                    "name": "TestBot",
+                    "path": "TestBot.csproj",
+                    "packages": [
+                        {
+                            "name": "Microsoft.ApplicationInsights",
+                            "version": "1.0.0"
+                        }
+                    ],
+                    "references": [
+                        {
+                            "path": "Intercom/Intercom.helpser.csproj"
+                        }
+                    ],
+                    "lastUpdate": "20210816",
+                    "authors": "TBD",
+                    "lines": "20000"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "codeinsights",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "index": "node index.js",
+    "report": "node report.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/boydc2014/codeinsights.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/boydc2014/codeinsights/issues"
+  },
+  "homepage": "https://github.com/boydc2014/codeinsights#readme"
+}

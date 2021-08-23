@@ -1,0 +1,54 @@
+{
+ "name": "Intercom",
+ "children": [
+  {
+   "name": "azure",
+   "children": [
+    {
+     "name": "portal",
+     "children": [
+      {"name": "BotService", "value": 3938}
+     ]
+    }
+   ]
+  },
+  {
+    "name": "Channles",
+    "children": [
+     { "name": "AlexaChannel", 
+        "children": [
+            {"name": "AlexaChannel.csproj", "value": 600},
+            {"name": "Utility", "value": 3534}
+        ]
+     },
+     {"name": "FacebookChannel", "value": 5731},
+     {"name": "EmailChannel", "value": 7840},
+     {"name": "LineChannel", "value": 5914},
+     {"name": "KikChannel", "value": 3416},
+     {"name": "Others", "value": 3416}
+    ]
+   },
+  {
+   "name": "ExpressV2",
+   "children": [
+    {"name": "emulated", "value": 7010},
+    {"name": "project", "value": 5842},
+    {
+     "name": "ServiceGroupRoot",
+     "children": [
+      {"name": "icmTikets", "value": 1983}
+     ]
+    },
+    {
+    "name": "src",
+    "children": [
+        {"name": "bash", "value": 1983},
+        {"name": "gcs", "value": 2047},
+        {"name": "ts", "value": 1375}
+    ]
+    }
+   ]
+  
+  }
+ ]
+}

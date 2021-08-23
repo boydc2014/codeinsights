@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "index": "node index.js",
+    "start": "cd visualize && node app.js",
     "report": "node report.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,5 +18,9 @@
   "bugs": {
     "url": "https://github.com/boydc2014/codeinsights/issues"
   },
-  "homepage": "https://github.com/boydc2014/codeinsights#readme"
+  "homepage": "https://github.com/boydc2014/codeinsights#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "serve-index": "^1.9.1"
+  }
 }

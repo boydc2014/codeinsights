@@ -1,0 +1,14 @@
+{
+  "name": "@d3/cascaded-treemap",
+  "main": "ad3dde47d2aa46cb@173.js",
+  "version": "173.0.0",
+  "homepage": "https://observablehq.com/@d3/cascaded-treemap",
+  "author": {
+    "name": "D3",
+    "url": "https://observablehq.com/@d3"
+  },
+  "type": "module",
+  "peerDependencies": {
+    "@observablehq/runtime": "4"
+  }
+}

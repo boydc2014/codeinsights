@@ -33,6 +33,7 @@ const getEnvironmentVariable = (name) => {
       variable = "Microsoft.Common.props";
       break;
   }
+  return variable;
 }
 
 const tokens = c.split('\\');

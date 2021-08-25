@@ -5,7 +5,7 @@
         {
             "name": "TestBot.sln",
             "path": "Intercom/Testbot.sln",
-            "projects": [
+            "csprojects": [
                 {
                     "name": "TestBot",
                     "path": "TestBot.csproj",
@@ -31,6 +31,12 @@
                         "netframework4.8",
                         "netcore3.1"
                     ]
+                }
+            ],
+            "otherProject": [
+                {
+                    "name": "WebUI",
+                    "path": "WebUI"
                 }
             ]
         }

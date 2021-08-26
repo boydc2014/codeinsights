@@ -9,6 +9,7 @@
                 {
                     "name": "TestBot",
                     "path": "TestBot.csproj",
+                    "type": "csProject",
                     "packages": [
                         {
                             "name": "Microsoft.ApplicationInsights",
@@ -21,7 +22,10 @@
                         }
                     ],
                     "lastUpdate": "20210816",
-                    "authors": ["Zhixiang", "Dong"],
+                    "authors": [
+                        "Zhixiang",
+                        "Dong"
+                    ],
                     "fileCount": "200",
                     "lineCount": "20000",
                     "targetFrameworks": [

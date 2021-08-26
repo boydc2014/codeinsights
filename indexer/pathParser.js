@@ -1,16 +1,16 @@
 const path = require('path');
+const { FileProcesser } = require('../utils/fileUtil');
 
-const { readdirSync, statSync } = require('./util/fileUtil');
 const func = {
   "[MSBuild]::GetDirectoryNameOfFileAbove": (thePath, theFile) => {
-    if (statSync(thePath).isFile()) {
+    if (FileProcesser.statSync(thePath).isFile()) {
       thePath = path.dirname(thePath);
     }
     let prePath = '';
     let files = [];
     let realPath = ''
     while (prePath !== thePath) {
-      files = readdirSync(thePath);
+      files = FileProcesser.readdirSync(thePath);
       const index = files.findIndex((f) => f.endsWith(theFile));
       if (index > -1) {
         realPath = thePath;

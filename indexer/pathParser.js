@@ -1,119 +1,151 @@
 const path = require('path');
-//const a = "$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildThisFileDirectory)../', 'Intercom.sln'))\\ExpressV2\\project\\import.proj"
-const b = "$(MSBuildExtensionsPath)\\$(MSBuildToolsVersion)\\Microsoft.Common.props"
-const c = "$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildThisFileDirectory)../', 'Intercom.sln'))\\CommonTargets\\Intercom.shared.targets"
 
+const { readdirSync, statSync } = require('./util/fileUtil');
 const func = {
-  "[MSBuild]::GetDirectoryNameOfFileAbove": (...pathToken) => {
-    console.log(pathToken);
-    console.log('拼接pathtoken然后算出文件夹路径')
-    return `Dir path of path.resolve(${pathToken})`;
-  },
-  "F": (...pathToken) => {
-    console.log(pathToken);
-    console.log('拼接pathtoken然后算出文件夹路径')
-    return `Dir path of path.resolve(${pathToken})`;
+  "[MSBuild]::GetDirectoryNameOfFileAbove": (thePath, theFile) => {
+    if (statSync(thePath).isFile()) {
+      thePath = path.dirname(thePath);
+    }
+    let prePath = '';
+    let files = [];
+    let realPath = ''
+    while (prePath !== thePath) {
+      files = readdirSync(thePath);
+      const index = files.findIndex((f) => f.endsWith(theFile));
+      if (index > -1) {
+        realPath = thePath;
+        break;
+      }
+      prePath = thePath;
+      thePath = path.dirname(thePath);
+    }
+    if (!realPath) {
+      return 'failed to find the directory of the target file';
+    }
+    return realPath;
   },
 }
 
-const findVariable = (name) => {
-  return 'TOKEN/'
-}
-
-const getEnvironmentVariable = (name) => {
+//collect variable key words here for replacing
+const getEnvironmentVariable = (name, currentFilePath) => {
   let variable = ""
   switch (name) {
     case "MSBuildThisFileDirectory":
-      variable = "project path directory";
-      break;
-    case "MSBuildExtensionsPath":
-      variable = "MSBuildExtensionsPath";
+      variable = path.dirname(currentFilePath);
+      if (!variable.endsWith('\\')) {
+        variable += '\\';
+      }
       break;
     case "MSBuildToolsVersion":
-      variable = "Microsoft.Common.props";
+      variable = "$(MSBuildToolsVersion)";
       break;
+    case "MSBuildExtensionsPath":
+      variable = "$(MSBuildExtensionsPath)";
+      break;
+    case "USERPROFILE":
+      variable = process.env.HOME || process.env.USERPROFILE;
+      break;
+    default:
+      variable = `$(${name})`; //add $() to show that it is still a variable
   }
   return variable;
 }
 
-const tokens = c.split('\\');
-const token = tokens[0];
-let constString = [];
-let variableType = ""; // variable $() , function $(functionname()) , append ''
-let operationName = [];
-let operationType = [];
-let name = '';
-let isPair = true;
-let isFunctionEnding = false;
-//保存当前操作类型 遇到新的操作符时将当前的入栈，遇到)或'表示当前的操作结束需要出栈
-for (let i = 0; i < token.length; i++) {
-  const c = token[i]
-  if (token[i] === '$' && token[i + 1] === '(') {
-    if (variableType) {
-      operationName.push(name);
-      operationType.push(variableType);
-      constString.push('#')
-    }
-    name = '';
-    variableType = "variable";
-    i++;
-  } else if (token[i] === "'") {
-    isPair = !isPair;
-    if (!isPair) {// 第1个' 
-      if (variableType) {
-        operationName.push(name);
-        operationType.push(variableType);
-        constString.push('#')
-      }
-      name = '';
-      variableType = 'append';
-    } else { // 第2个' 开始计算拼接
-      let p = '';
-      while (true) {
-        const c = constString.pop();
-        if (c === '#') {
-          break;
-        } else {
-          p += c;
-        }
-      }
-      p += name;
-      constString.push(p);
-      name = operationName.pop();
-      variableType = operationType.pop();
-    }
-  } else if (token[i] === '(') {
-    if (variableType === 'variable') { //更新当前操作符
-      variableType = "function";
-    }
-  } else if (token[i] === ')') {
-    if (isFunctionEnding) {
-      isFunctionEnding = false;
-    } else if (variableType === 'function') { //当前为函数结束的)
-      const arguments = [];
-      while (true) {
-        const c = constString.pop();
-        if (c === '#') {
-          break;
-        } else {
-          arguments.unshift(c);
-        }
-      }
-      const p = func[name](...arguments);
-      constString.push(p);
-      isFunctionEnding = true;
-    } else if (variableType === 'variable') {//当前为变量结束的符号)
-      const can = findVariable(name);
-      constString.push(can);
-      name = operationName.pop();
-      variableType = operationType.pop();
-    }
+const parse = (rawPath, currentFilePath) => {
+  const tokens = rawPath.split('\\');
 
-  } else if (token[i] === "," || token[i] === " ") {
+  let constString = [];
+  let variableType = ""; // variable $() , function $(functionname()) , append ''
+  let operationName = [];
+  let operationType = [];
+  let name = '';
+  let isPair = true;
+  let isFunctionEnding = false; 0
+  //keep current operation type, 
+  //when meeting a new operation, push the current one into stack
+  //when meeting ) or ', pop operation out of stack
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (!token.startsWith('$')) {
+      constString.push(token);
+      continue;
+    }
+    for (let j = 0; j < token.length; j++) {
+      const c = token[j]
+      if (token[j] === '$' && token[j + 1] === '(') {
+        if (variableType) {
+          operationName.push(name);
+          operationType.push(variableType);
+          constString.push('#')
+        }
+        name = '';
+        variableType = "variable";
+        j++;
+      } else if (token[j] === "'") {
+        isPair = !isPair;
+        if (!isPair) {// process the first ' 
+          if (variableType) {
+            operationName.push(name);
+            operationType.push(variableType);
+            constString.push('#')
+          }
+          name = '';
+          variableType = 'append';
+        } else { // process the second ', start appending
+          let p = '';
+          while (true) {
+            const c = constString.pop();
+            if (c === '#') {
+              break;
+            } else {
+              p += c;
+            }
+          }
+          p += name;
+          constString.push(p);
+          name = operationName.pop();
+          variableType = operationType.pop();
+        }
+      } else if (token[j] === '(') {
+        if (variableType === 'variable') { // update current opertaion type
+          variableType = "function";
+        }
+      } else if (token[j] === ')') {
+        if (isFunctionEnding) {
+          isFunctionEnding = false;
+        } else if (variableType === 'function') { // this ) is the end of a function
+          const arguments = [];
+          while (true) {
+            const c = constString.pop();
+            if (c === '#') {
+              break;
+            } else {
+              arguments.unshift(c);
+            }
+          }
+          const p = func[name](...arguments);
+          constString.push(p);
+          isFunctionEnding = true;
+        } else if (variableType === 'variable') {// this ) is the end of a variable
+          const can = getEnvironmentVariable(name, currentFilePath);
+          constString.push(can);
+          name = operationName.pop();
+          variableType = operationType.pop();
+        }
 
-  } else {
-    name += token[i];
+      } else if (token[j] === "," || token[j] === " ") {
+        continue;
+      } else {
+        name += token[j];
+      }
+    }
   }
+
+  const realPath = constString.join('\\')
+
+  return realPath;
 }
 
-console.log(constString);
+module.exports = {
+  parse,
+}

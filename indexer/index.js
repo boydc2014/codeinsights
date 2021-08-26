@@ -1,5 +1,7 @@
 const path = require('path');
-const { readFileLines, readdirSync, statSync } = require('./util/fileUtil');
+const { readFileLines, readdirSync, statSync, writeFileSync, mkDirSync } = require('./util/fileUtil');
+const { parse } = require('./pathParser');
+
 
 const rootDir = process.argv[2];
 
@@ -12,6 +14,7 @@ const indexJson = {
   path: rootDir,
   solutions: []
 }
+
 
 const getSlnFiles = (rootDir) => {
   const slnFiles = [];
@@ -27,7 +30,6 @@ const getSlnFiles = (rootDir) => {
         indexJson.solutions.push({
           name: f,
           path: filePath,
-          projects: []
         })
       }
     });
@@ -64,14 +66,19 @@ const getProjectsFromSlnFile = (slnFile) => {
   return { csProjects, otherProjects };
 }
 
-const generateProjectDetails = (slnFile, slnIndex) => {
+const generateProjectDetails = (solution, slnIndex) => {
   //ignore non csproj projects at this moment
-  const projects = slnFile.csProjects;
+  const projects = solution.csProjects || [];
   for (let i = 0; i < projects.length; i++) {
     const project = projects[i];
     if (project.path.endsWith('.csproj')) {
-      indexJson.solutions[slnIndex].csProjects[i].packages = getProjectPackageReference(project);
-      indexJson.solutions[slnIndex].csProjects[i].reference = getProjectImport(project);
+      try {
+        indexJson.solutions[slnIndex].csProjects[i].packages = getProjectPackageReference(project);
+        indexJson.solutions[slnIndex].csProjects[i].reference = getProjectImport(project);
+      } catch (e) {
+        indexJson.solutions[slnIndex].csProjects[i].error = e;
+      }
+
     }
   }
 }
@@ -111,7 +118,9 @@ const getProjectImport = (project) => {
       }
       i++;
     }
-    return l.substring(first, second + 1);
+    const rawPath = l.substring(first + 1, second)
+    const realPath = parse(rawPath, project.path);
+    return realPath;
   });
   return imports;
 }
@@ -124,10 +133,15 @@ slnFiles.forEach((s, index) => {
   indexJson.solutions[index].otherProjects = otherProjects;
 })
 
-const intercomsln = indexJson.solutions[37];
-generateProjectDetails(intercomsln, 37);
-// slnFiles.forEach((sln, i) => {
-//   generateProjectDetails(sln, i);
-// })
+// const intercomsln = indexJson.solutions[37];
+// generateProjectDetails(intercomsln, 37);
+for (let i = 0; i < indexJson.solutions.length; i++) {
+  generateProjectDetails(indexJson.solutions[i], i);
+}
 
-console.log(indexJson.solutions[37]);
+
+let gitHead = readFileLines(`${rootDir}/.git/HEAD`)[0].split(' ')[1];
+let hash = readFileLines(`${rootDir}/.git/${gitHead.substring(0, gitHead.length - 1)}`)[0];
+hash = hash.substring(0, hash.length - 1);
+mkDirSync(`./${hash}`)
+writeFileSync(`./${hash}/data.json`, indexJson);

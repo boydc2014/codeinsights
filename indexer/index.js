@@ -1,5 +1,6 @@
 const { SolutionIndexer } = require('./SolutionIndexer');
 const { ProjectIndexer } = require('./ProjectIndexer');
+const { FileProcesser } = require('../utils/fileUtil');
 
 const index = (rootDir) => {
   const indexJson = {
@@ -23,19 +24,23 @@ const index = (rootDir) => {
     for (let j = 0; j < projects.length; j++) {
       const project = projects[j];
       //ignore non csproject at this moment
-      if (project.type === 'cpsCsProject' || project.type === 'csProject') {
-        console.log("   ", `project ${project.path}`)
-        try {
-          indexJson.solutions[i].projects[j].packages = ProjectIndexer.getProjectPackageReference(project);
-          console.log("       ", `${indexJson.solutions[i].projects[j].packages.length} package reference found`);
-          indexJson.solutions[i].projects[j].reference = ProjectIndexer.getProjectImport(project);
-          console.log("       ", `${indexJson.solutions[i].projects[j].reference.length} imports found`);
-          indexJson.solutions[i].projects[j].exist = true;
-        } catch (e) {
-          indexJson.solutions[i].projects[j].exist = false;
+      //if (project.type === 'csharp') {
+      console.log("   ", `project ${project.path}`)
+      try {
+        indexJson.solutions[i].projects[j].packages = ProjectIndexer.getPackageReferences(project);
+        console.log("       ", `${indexJson.solutions[i].projects[j].packages.length} package reference found`);
+        indexJson.solutions[i].projects[j].references = ProjectIndexer.getProjectReferences(project);
+        console.log("       ", `${indexJson.solutions[i].projects[j].references.length} reference projects found`);
+        indexJson.solutions[i].projects[j].exist = true;
+      } catch (e) {
+        indexJson.solutions[i].projects[j].exist = false;
+        if (FileProcesser.existsSync(indexJson.solutions[i].projects[j].path)) {
+          console.log(e)
+        } else {
           console.log("       ", `project: ${project.path} does not exist`);
         }
       }
+      //}
     }
   }
   return indexJson;

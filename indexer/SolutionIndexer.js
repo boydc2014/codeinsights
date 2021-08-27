@@ -3,8 +3,8 @@ const path = require('path');
 
 
 const projectTypes = {
-  "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}": "csProject",
-  "{9A19103F-16F7-4668-BE54-9A1E7A4F7556}": "cpsCsProject",
+  "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}": "csharp",
+  "{9A19103F-16F7-4668-BE54-9A1E7A4F7556}": "csharp",
   "{2150E333-8FDC-42A3-9474-1A3956D46DE8}": "solutionFolder",
 }
 
@@ -43,11 +43,15 @@ class SolutionIndexer {
       }));
       const projectDescription = tokens[0].split('"');
       const projectRelativePath = tokens[1].substring(1, tokens[1].length - 1);
-      projects.push({
-        name: projectDescription[projectDescription.length - 2],
-        path: projectDir + '\\' + projectRelativePath,
-        type: projectTypes[projectDescription[1]],
-      });
+      //only collect csharp project
+      if (projectTypes[projectDescription[1]] === 'csharp') {
+        projects.push({
+          name: projectDescription[projectDescription.length - 2],
+          path: projectDir + '\\' + projectRelativePath,
+          // type: projectTypes[projectDescription[1]] || 'unknown',
+        });
+      }
+
     })
     return projects;
   }

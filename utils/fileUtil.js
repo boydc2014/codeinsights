@@ -23,6 +23,10 @@ class FileProcesser {
       fs.mkdirSync(path);
     }
   }
+
+  existsSync = (path) => {
+    return fs.existsSync(path);
+  }
 }
 
 

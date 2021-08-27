@@ -7,7 +7,8 @@
     "index": "node index.js",
     "start": "cd visualize && node app.js",
     "report": "node report.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "insights": "node scripts/insights.js"
   },
   "repository": {
     "type": "git",

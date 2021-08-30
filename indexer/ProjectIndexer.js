@@ -81,7 +81,6 @@ class ProjectIndexer {
     const processFile = (filePath) => {
       const imports = this.getImportPath(filePath, path.dirname(project.path));
       importPaths = importPaths.concat(imports);
-      // const properties = this.getProperties(path);
       imports.forEach((im) => {
         processFile(im);
       })
@@ -93,6 +92,7 @@ class ProjectIndexer {
         fileProperties = this.importsCache[p];
       } else {
         fileProperties = this.getProperties(p);
+        this.importsCache[p] = fileProperties;
       }
       Object.assign(definedProperty, fileProperties);
     })
@@ -126,6 +126,8 @@ class ProjectIndexer {
         let literalPath = parse(rawPath, filePath);
         if (!path.isAbsolute(literalPath)) {
           literalPath = path.resolve(projectPath, literalPath);
+        } else {
+          literalPath = path.join(literalPath);
         }
         return literalPath;
       });

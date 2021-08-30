@@ -1,5 +1,5 @@
 const { FileProcesser } = require('../utils/fileUtil');
-const path = require('path');
+const { path } = require('../utils/pathUtil');
 
 
 const projectTypes = {

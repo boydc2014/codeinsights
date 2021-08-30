@@ -1,4 +1,4 @@
-const path = require('path');
+const { path } = require('../utils/pathUtil');
 const fs = require('fs');
 const { exit } = require('process');
 
@@ -8,24 +8,21 @@ const getSubDirNames = (dir) => {
     return fs.readdirSync(dir);
 }
 
-const getIndexNames = () => 
-{
+const getIndexNames = () => {
     return getSubDirNames(indexesDir).filter(x => x !== "test");
 }
 
-var loadIndex = () =>
-{
+var loadIndex = () => {
     const indexNames = getIndexNames();
     if (indexNames.length == 0) {
         console.log("No indexes is found at ./indexes, did you forget to run 'node index.js <full path to repo>'? ");
         exit(1);
     }
 
-    if (indexNames.length > 1)
-    {
+    if (indexNames.length > 1) {
         console.log(`Mulitple indexes are found in ./indexes, but we only load the first one ${indexNames[0]}`);
     }
-    
+
     const indexPath = path.join(indexesDir, indexNames[0], 'repo.json');
     if (!fs.existsSync(indexPath)) {
         console.log(`No index file found at ${indexPath}, abort`);
@@ -65,8 +62,7 @@ const QAs = [
     }
 ]
 
-QAs.forEach(qa => 
-{
+QAs.forEach(qa => {
     console.log(`Q: ${qa.question}`);
     console.log(`A: ${qa.answer(index)}`);
 });

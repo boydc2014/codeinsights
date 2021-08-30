@@ -1,4 +1,4 @@
-const path = require('path');
+const { path } = require('../utils/pathUtil');
 const { FileProcesser } = require('../utils/fileUtil');
 
 const func = {
@@ -32,8 +32,8 @@ const getEnvironmentVariable = (name, currentFilePath) => {
   switch (name) {
     case "MSBuildThisFileDirectory":
       variable = path.dirname(currentFilePath);
-      if (!variable.endsWith('\\')) {
-        variable += '\\';
+      if (!variable.endsWith('/')) {
+        variable += '/';
       }
       break;
     case "MSBuildToolsVersion":
@@ -141,7 +141,7 @@ const parse = (rawPath, currentFilePath) => {
     }
   }
 
-  const realPath = constString.join('\\')
+  const realPath = constString.join('/').replace(/\/\//g, '/');
 
   return realPath;
 }

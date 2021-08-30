@@ -27,11 +27,12 @@ const index = (rootDir) => {
       //if (project.type === 'csharp') {
       console.log("   ", `project ${project.path}`)
       try {
-        indexJson.solutions[i].projects[j].packages = ProjectIndexer.getPackageReferences(project);
+        const importProperties = ProjectIndexer.getImportsProperties(project);
+        indexJson.solutions[i].projects[j].packages = ProjectIndexer.getPackageReferences(project, importProperties);
         console.log("       ", `${indexJson.solutions[i].projects[j].packages.length} package reference found`);
         indexJson.solutions[i].projects[j].references = ProjectIndexer.getProjectReferences(project);
         console.log("       ", `${indexJson.solutions[i].projects[j].references.length} reference projects found`);
-        indexJson.solutions[i].projects[j].targetFrameworks = ProjectIndexer.getTargetFramework(project);
+        indexJson.solutions[i].projects[j].targetFrameworks = ProjectIndexer.getTargetFramework(project, importProperties);
         console.log("       ", `target framework is ${indexJson.solutions[i].projects[j].targetFrameworks}`);
         const { fileCount, lineCount } = ProjectIndexer.getProjectFiles(project);
         indexJson.solutions[i].projects[j].fileCount = fileCount;

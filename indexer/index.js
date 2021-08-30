@@ -31,13 +31,25 @@ const index = (rootDir) => {
         console.log("       ", `${indexJson.solutions[i].projects[j].packages.length} package reference found`);
         indexJson.solutions[i].projects[j].references = ProjectIndexer.getProjectReferences(project);
         console.log("       ", `${indexJson.solutions[i].projects[j].references.length} reference projects found`);
-        indexJson.solutions[i].projects[j].exist = true;
+        indexJson.solutions[i].projects[j].targetFrameworks = ProjectIndexer.getTargetFramework(project);
+        console.log("       ", `target framework is ${indexJson.solutions[i].projects[j].targetFrameworks}`);
+        const { fileCount, lineCount } = ProjectIndexer.getProjectFiles(project);
+        indexJson.solutions[i].projects[j].fileCount = fileCount;
+        console.log("       ", `${indexJson.solutions[i].projects[j].fileCount} files found`);
+        indexJson.solutions[i].projects[j].lineCount = lineCount;
+        console.log("       ", `${indexJson.solutions[i].projects[j].lineCount} lines of code`);
+        const { authors, lastUpdate } = ProjectIndexer.getProjectGitInfo(project);
+        indexJson.solutions[i].projects[j].authors = authors;
+        indexJson.solutions[i].projects[j].lastUpdate = lastUpdate;
+        console.log("       ", `${authors}`);
+        console.log("       ", `${lastUpdate}`);
       } catch (e) {
-        indexJson.solutions[i].projects[j].exist = false;
+        //
         if (FileProcesser.existsSync(indexJson.solutions[i].projects[j].path)) {
           console.log(e)
         } else {
           console.log("       ", `project: ${project.path} does not exist`);
+          indexJson.solutions[i].projects[j].notExist = true;
         }
       }
       //}

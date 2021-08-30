@@ -1,6 +1,7 @@
 const { FileProcesser } = require('../utils/fileUtil');
 const { parse } = require('./pathParser');
 const path = require('path');
+const execSync = require('child_process').execSync;
 class ProjectIndexer {
   getPackageReferences = (project) => {
     const packages = [];
@@ -39,33 +40,80 @@ class ProjectIndexer {
     })
     return projectReferences;
   }
-}
 
-getImports = (project) => {
-  const lines = FileProcesser.readFileLines(project.path).map((l) => l.trim());
-  const importLines = lines.filter((l) => l.startsWith('<Import'));
+  getTargetFramework = (project) => {
+    const lines = FileProcesser.readFileLines(project.path).map((l) => l.trim());
+    const projectTargetFrameworks = lines.filter((l) => l.startsWith('<TargetFramework>'));
+    const targetFrameworks = projectTargetFrameworks.map((l) => {
+      const s = l.indexOf('>');
+      const e = l.indexOf('</');
+      return l.substring(s + 1, e);
+    })
+    return targetFrameworks;
+  }
 
-  const imports = importLines.map((l) => {
-    let i = 0;
-    let first = -1;
-    let second = -1;
-    while (i < l.length) {
-      if (l[i] === '"') {
-        if (first === -1) {
-          first = i;
-        } else {
-          second = i;
-          break
+
+  getImports = (project) => {
+    const lines = FileProcesser.readFileLines(project.path).map((l) => l.trim());
+    const importLines = lines.filter((l) => l.startsWith('<Import'));
+
+    const imports = importLines.map((l) => {
+      let i = 0;
+      let first = -1;
+      let second = -1;
+      while (i < l.length) {
+        if (l[i] === '"') {
+          if (first === -1) {
+            first = i;
+          } else {
+            second = i;
+            break
+          }
         }
+        i++;
       }
-      i++;
+      const rawPath = l.substring(first + 1, second)
+      const realPath = parse(rawPath, project.path);
+      return realPath;
+    });
+    return imports;
+  }
+
+  getProjectFiles = (project) => {
+    const projectFiles = [];
+    let lineCount = 0;
+    const getFiles = (rootDir) => {
+      const files = FileProcesser.readdirSync(rootDir);
+      files.forEach((f) => {
+        const filePath = path.resolve(rootDir, f);
+        const fileStat = FileProcesser.statSync(filePath);
+        if (fileStat.isDirectory()) {
+          getFiles(filePath);
+        } else if (filePath !== project.path) { // .csproj file should not be counted
+          const lines = FileProcesser.readFileLines(filePath);
+          lineCount += lines.length;
+          projectFiles.push({
+            name: f,
+            path: filePath,
+          });
+        }
+      });
     }
-    const rawPath = l.substring(first + 1, second)
-    const realPath = parse(rawPath, project.path);
-    return realPath;
-  });
-  return imports;
+    getFiles(path.dirname(project.path));
+
+    return { fileCount: projectFiles.length, lineCount };
+  }
+
+  getProjectGitInfo = (project) => {
+    //search for authors cmd may not work in Unix/Linux
+    let authors = execSync(`cd ${path.dirname(project.path)} && git log --pretty=format:"%an%x09" . | sort /unique`).toString().trim();
+    authors = authors.split('\t\r\n')
+    const lastUpdate = execSync(`cd ${path.dirname(project.path)} && git show -s --format=%cd`).toString().trim();
+    return { authors, lastUpdate };
+  }
+
 }
+
 
 
 

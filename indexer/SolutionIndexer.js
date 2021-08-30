@@ -47,7 +47,7 @@ class SolutionIndexer {
       if (projectTypes[projectDescription[1]] === 'csharp') {
         projects.push({
           name: projectDescription[projectDescription.length - 2],
-          path: projectDir + '\\' + projectRelativePath,
+          path: path.resolve(projectDir, projectRelativePath),
           // type: projectTypes[projectDescription[1]] || 'unknown',
         });
       }

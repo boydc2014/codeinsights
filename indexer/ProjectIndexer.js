@@ -194,8 +194,22 @@ class ProjectIndexer {
     //search for authors cmd may not work in Unix/Linux
     let authors = execSync(`cd ${path.dirname(project.path)} && git log --pretty=format:"%an%x09" . | sort /unique`).toString().trim();
     authors = authors.split('\t\r\n')
-    const lastUpdate = execSync(`cd ${path.dirname(project.path)} && git show -s --format=%cd`).toString().trim();
-    return { authors, lastUpdate };
+    const lastUpdateTime = this.formatDate(execSync(`cd ${path.dirname(project.path)} && git log -n 1 --pretty=format:%ad .`).toString().trim());
+    return { authors, lastUpdateTime };
+  }
+
+  formatDate(date) {
+    var d = new Date(date),
+      month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+    if (month.length < 2)
+      month = '0' + month;
+    if (day.length < 2)
+      day = '0' + day;
+
+    return [year, month, day].join('');
   }
 
 }

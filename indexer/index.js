@@ -47,11 +47,11 @@ const index = (rootDir) => {
         console.log("       ", `${indexJson.solutions[i].projects[j].fileCount} files found`);
         indexJson.solutions[i].projects[j].lineCount = lineCount;
         console.log("       ", `${indexJson.solutions[i].projects[j].lineCount} lines of code`);
-        const { authors, lastUpdate } = ProjectIndexer.getProjectGitInfo(project);
+        const { authors, lastUpdateTime } = ProjectIndexer.getProjectGitInfo(project);
         indexJson.solutions[i].projects[j].authors = authors;
-        indexJson.solutions[i].projects[j].lastUpdate = lastUpdate;
+        indexJson.solutions[i].projects[j].lastUpdateTime = lastUpdateTime;
         console.log("       ", `${authors}`);
-        console.log("       ", `${lastUpdate}`);
+        console.log("       ", `${lastUpdateTime}`);
       } catch (e) {
         //
         if (FileProcesser.existsSync(indexJson.solutions[i].projects[j].path)) {

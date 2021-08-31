@@ -27,6 +27,10 @@ class PathHandler {
   isAbsolute(param) {
     return path.isAbsolute(param);
   }
+
+  normalize(param) {
+    return path.normalize(param).replace(/\\/g, '/');
+  }
 }
 
 module.exports = {

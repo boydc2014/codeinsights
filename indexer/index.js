@@ -18,6 +18,13 @@ const index = (rootDir) => {
     indexJson.solutions[index].projects = projects;
   })
 
+  //initial three variables defined in ./${rootDir}/Directory.Build.props
+  const initialProperties = {
+    "IbizaExtensionVersion": "1.4.1.x",
+    "IntercomWebUIVersion": "1.6.20-92600",
+    "IntercomClientWebUIVersion": "1.1.30-107739",
+    "IntercomBotAppTemplatesVersion": "1.3.27-92712",
+  }
   for (let i = 0; i < indexJson.solutions.length; i++) {
     const projects = indexJson.solutions[i].projects || [];
     console.log(`indexing ${i + 1}: ${indexJson.solutions[i].path}`)
@@ -27,7 +34,8 @@ const index = (rootDir) => {
       //if (project.type === 'csharp') {
       console.log("   ", `project ${project.path}`)
       try {
-        const importProperties = ProjectIndexer.getImportsProperties(project);
+        let importProperties = ProjectIndexer.getImportsProperties(project);
+        importProperties = Object.assign(importProperties, initialProperties);
         indexJson.solutions[i].projects[j].packages = ProjectIndexer.getPackageReferences(project, importProperties);
         console.log("       ", `${indexJson.solutions[i].projects[j].packages.length} package reference found`);
         indexJson.solutions[i].projects[j].references = ProjectIndexer.getProjectReferences(project);

@@ -15,9 +15,9 @@ class ProjectIndexer {
     packageReferenceLines.map((l) => {
       const tokens = l.split(' ');
       const name = tokens[1].split("\"")[1];
-      let version = tokens[2] ? tokens[2].split("\"")[1] : '';
-      if (version.startsWith('$(')) {
-        const name = version.substring(2, framework.length - 1);
+      let version = tokens[2] ? tokens[2].split("\"")[1] : "null";
+      if (version && version.startsWith('$(')) {
+        const name = version.substring(2, version.length - 1);
         version = definedProperty[name] ? definedProperty[name] : version;
       }
       packages.push({
@@ -35,8 +35,8 @@ class ProjectIndexer {
       });
 
       let version = token[1] ? token[1][1] : "null";
-      if (version.startsWith('$(')) {
-        const name = version.substring(2, framework.length - 1);
+      if (version && version.startsWith('$(')) {
+        const name = version.substring(2, version.length - 1);
         version = definedProperty[name] ? definedProperty[name] : version;
       }
 
@@ -79,13 +79,14 @@ class ProjectIndexer {
     let importPaths = [];
     const definedProperty = {}
     const processFile = (filePath) => {
-      const imports = this.getImportPath(filePath, path.dirname(project.path));
+      const imports = this.getImportPath(filePath, path.dirname(filePath));
       importPaths = importPaths.concat(imports);
       imports.forEach((im) => {
         processFile(im);
       })
     }
     processFile(project.path);
+    importPaths.unshift(project.path);
     importPaths.forEach((p) => {
       let fileProperties = {};
       if (this.importsCache[p]) {

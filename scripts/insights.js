@@ -93,9 +93,9 @@ const QAs = [
         }
     },
     {
-        question: "How many\What are the leaf projects (other dependented by others)? ",
+        question: "How many\What are the single projects (only dependented by others)? ",
         answer: (index) => {
-            return "TBD";
+            return "30, they are ";
         }
     },
     {
@@ -105,9 +105,15 @@ const QAs = [
         }
     },
     {
-        question: "How many projects havn't been updated in last 2 years?",
+        question: "How many\What are the proxy node, used by one and use one ",
         answer: (index) => {
             return "TBD";
+        }
+    },
+    {
+        question: "How many projects havn't been updated in last 0.5\1\1.5\2.0\2.5\3.0 years?",
+        answer: (index) => {
+            return "15 updated in 0.5 years, 20 updated in last year"
         }
     },
     {

@@ -67,6 +67,54 @@ const QAs = [
             }
             return summary;
         }
+    },
+    {
+        question: "How many projects are testing (usually ends with .Tests?)",
+        answer: (index) => {
+            return "TBD";
+        }
+    },
+    {
+        question: "How many projects refers to other projects? Which one refers to most projects?",
+        answer: (index) => {
+            return "TBD";
+        }
+    },
+    {
+        question: "How many projects are refered by other projects? Which one is refered by the most projects?",
+        answer: (index) => {
+            return "TBD";
+        }
+    },
+    {
+        question: "How many projects are targeting netstandard? (means it must be a lib)",
+        answer: (index) => {
+            return "TBD";
+        }
+    },
+    {
+        question: "How many\What are the leaf projects (other dependented by others)? ",
+        answer: (index) => {
+            return "TBD";
+        }
+    },
+    {
+        question: "How many\What are the alone leafs, alone used by one project except tests project? ",
+        answer: (index) => {
+            return "TBD";
+        }
+    },
+    {
+        question: "How many projects havn't been updated in last 2 years?",
+        answer: (index) => {
+            return "TBD";
+        }
+    },
+    {
+        question: "How many\what are the projects only have 1 author in last 2 years?",
+        answer: (index) => {
+            return "TBD";
+        }
     }
 ]
 

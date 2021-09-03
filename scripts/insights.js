@@ -55,6 +55,7 @@ var reverseIndex = (index) => {
                 // Init project info
                 projects[pid] = {
                     name: name,
+                    id: pid,
                     containedBy: [sid],
                     refers: p.references.map(x => path.relative(index.path, x)),
                     referedBy: [], // Will fill this infomation in later passes
@@ -111,15 +112,16 @@ const QAs = [
     {
         question: "How many projects refers to other projects? Which one refers to most projects?",
         answer: (index) => {
-            const projects = index.solutions.flatMap(x => x.projects);
-            let mostDependOnOther = projects[0];
-            const dependOnOther = projects.filter((p) => {
-                if (p.references && p.references.length > mostDependOnOther.references.length) {
-                    mostDependOnOther = p;
+            const projects = Object.entries(rIndex).map(entry => entry[1]);
+            const projectHasRefers = projects.filter(p => p.refers.length > 0);
+
+            let projectHasMostRefers = projectHasRefers[0];
+            projectHasRefers.forEach(p => {
+                if (p.refers.length > projectHasMostRefers.refers.length) {
+                    projectHasMostRefers = p;
                 }
-                return p.references && p.references.length > 0;
-            });
-            return `${dependOnOther.length} projects refers to other projects, ${mostDependOnOther.path} refers to most projects`;
+            })
+            return `${projectHasRefers.length} projects refers to other projects, ${projectHasMostRefers.name} at ${projectHasMostRefers.id} refers to most ${projectHasMostRefers.refers.length} projects`;
         }
     },
     {
@@ -321,7 +323,7 @@ const QAs = [
 
 const statics = {}
 
-QAs.slice(0, 2).forEach(qa => {
+QAs.slice(0, 4).forEach(qa => {
     console.log(`Q: ${qa.question}`);
     const answer = qa.answer(index, rIndex);
     console.log(`A: ${answer}`);

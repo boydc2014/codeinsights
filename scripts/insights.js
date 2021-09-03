@@ -35,9 +35,40 @@ var loadIndex = () => {
     return JSON.parse(fs.readFileSync(indexPath));
 }
 
-const index = loadIndex();
 
+// Build a project-keyed index based on the orignial solution-keyed index
+// Maybe we should consider build directly a project-keyed index at the first place
+var reverseIndex = (index) => {
+    var projects = {};
+
+    // Iterate every project in every solution
+    index.solutions.forEach(s => {
+        const sid = path.relative(index.path, s.path);
+        s.projects.forEach(p => {
+            const pid = path.relative(index.path, p.path);
+
+            if (!(pid in projects))
+            {
+                projects[pid] = {
+                    id: pid,
+                    solutions: [sid]
+                }
+            }
+            else {
+                projects[pid].solutions.push(sid);
+            }
+        })
+    });
+    
+    return projects;
+}
+
+const index = loadIndex();
 console.log("Index loaded. ");
+
+const rIndex = reverseIndex(index);
+FileProcesser.writeFileSync("./projects.json", rIndex);
+console.log("Reverse index generated and saved to ./projects.json. ");
 
 const QAs = [
     {
@@ -47,9 +78,8 @@ const QAs = [
     {
         question: "How many projects in the repo?",
         //这里的projects统计的都是从sln文件引入的，还有不少projects是其他csproj refer的还未计算
-        answer: (index) => {
-            const projects = index.solutions.flatMap(x => x.projects);
-            return `Total projects:${projects.length}`;
+        answer: (index, rIndex) => {
+            return `Total projects:${Object.keys(rIndex).length}`;
         }
     },
     {
@@ -287,13 +317,15 @@ const QAs = [
     }
 ]
 
+
 const statics = {}
 
-QAs.forEach(qa => {
+QAs.slice(0, 2).forEach(qa => {
     console.log(`Q: ${qa.question}`);
-    const answer = qa.answer(index);
+    const answer = qa.answer(index, rIndex);
     console.log(`A: ${answer}`);
     statics[qa.question] = answer;
 });
 console.log(`statics data write to ${path.resolve(__dirname, './statics.txt')}`);
 FileProcesser.writeFileSync('./statics.txt', statics);
+

@@ -198,6 +198,13 @@ class ProjectIndexer {
     return { authors, lastUpdateTime };
   }
 
+  //sinceDate format: 20201231
+  getRecentAuthor = (project, sinceDate) => {
+    let authors = execSync(`cd ${path.dirname(project.path)} && git log --since=${sinceDate} --pretty=format:"%an%x09" . | sort /unique`).toString().trim();
+    authors = authors.split('\t\r\n')
+    return authors;
+  }
+
   formatDate(date) {
     var d = new Date(date),
       month = '' + (d.getMonth() + 1),
@@ -209,7 +216,7 @@ class ProjectIndexer {
     if (day.length < 2)
       day = '0' + day;
 
-    return [year, month, day].join('');
+    return [year, month, day].join('-');
   }
 
 }

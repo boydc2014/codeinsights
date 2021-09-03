@@ -1,5 +1,26 @@
 const fs = require('fs');
+const { path } = require('../utils/pathUtil');
+
 class FileProcesser {
+
+  glob = (directory, postfix) => {
+    var results = [];
+    const searchDir = (dir) => {
+      const files = fs.readdirSync(dir);
+      files.forEach((f) => {
+        const filePath = path.resolve(dir, f);
+        const fileStat = fs.statSync(filePath);
+        if (fileStat.isDirectory()) {
+          searchDir(filePath);
+        } else if (f.endsWith(postfix)) {
+          results.push(filePath);
+        }
+      });
+    }
+    searchDir(directory);
+    return results;
+  }
+
   readFileLines = (filepath) => {
     const data = fs.readFileSync(filepath, "utf8");
     const lines = data.split('\r\n');

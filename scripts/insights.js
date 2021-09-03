@@ -41,25 +41,34 @@ var loadIndex = () => {
 var reverseIndex = (index) => {
     var projects = {};
 
-    // Iterate every project in every solution
+    // Pass 1: Iterate every project in every solution and get some basic information
     index.solutions.forEach(s => {
         const sid = path.relative(index.path, s.path);
-        s.projects.forEach(p => {
+
+        // Filter out missing projects
+        s.projects.filter(p => !p.notExist).forEach(p => {
             const pid = path.relative(index.path, p.path);
+            const name = path.basename(p.path);
 
             if (!(pid in projects))
             {
+                // Init project info
                 projects[pid] = {
-                    id: pid,
-                    solutions: [sid]
+                    name: name,
+                    containedBy: [sid],
+                    refers: p.references.map(x => path.relative(index.path, x)),
+                    referedBy: [], // Will fill this infomation in later passes
+                    test: name.toLowerCase().includes("test")
                 }
             }
             else {
-                projects[pid].solutions.push(sid);
+                projects[pid].containedBy.push(sid);
             }
         })
     });
     
+    // Pass 2: fill in referedBy
+
     return projects;
 }
 
@@ -79,7 +88,9 @@ const QAs = [
         question: "How many projects in the repo?",
         //这里的projects统计的都是从sln文件引入的，还有不少projects是其他csproj refer的还未计算
         answer: (index, rIndex) => {
-            return `Total projects:${Object.keys(rIndex).length}`;
+            const testProjectsCount = Object.entries(rIndex).filter(entry => entry[1].test).length;
+
+            return `Total projects:${Object.keys(rIndex).length}, in which ${testProjectsCount} are tests`;
         }
     },
     {
@@ -96,16 +107,6 @@ const QAs = [
             }
             return summary;
         }
-    },
-    {
-        question: "How many projects are testing (usually ends with .Tests?)",
-        answer: (index) => {
-            const projects = index.solutions.flatMap(x => x.projects);
-            const length = projects.filter((p) => {
-                return p.name.toLowerCase().includes('test');
-            }).length;
-            return `Total Test projects:${length}`;
-        },
     },
     {
         question: "How many projects refers to other projects? Which one refers to most projects?",

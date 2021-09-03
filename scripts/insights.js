@@ -46,6 +46,7 @@ const QAs = [
     },
     {
         question: "How many projects in the repo?",
+        //这里的projects统计的都是从sln文件引入的，还有不少projects是其他csproj refer的还未计算
         answer: (index) => {
             const projects = index.solutions.flatMap(x => x.projects);
             return `Total projects:${projects.length}`;

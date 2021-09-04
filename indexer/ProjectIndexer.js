@@ -15,8 +15,6 @@ class ProjectIndexer {
     // Sendcond pass, tries to fill in the referedBy
     const projectsIndexMap = Object.fromEntries(projectsIndex.map(x => [x.path, x]));
     
-    // console.log("Map, ", projectsIndexMap);
-
     projectsIndex.forEach(p => {
       p.refers.forEach(re => {
         if (re in projectsIndexMap)
@@ -43,7 +41,7 @@ class ProjectIndexer {
       referedBy: [],
     }
 
-    projectIndex.isTest = projectIndex.name.toLowerCase().includes("test");
+    projectIndex.isTest = projectIndex.name.toLowerCase().includes("test.csproj") || projectIndex.name.toLowerCase().includes("tests.csproj");
     projectIndex.refers = this._getProjectReferences(projPath).map(re => path.unify(re));
     return projectIndex;
   }

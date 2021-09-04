@@ -36,49 +36,8 @@ var loadIndex = () => {
 }
 
 
-// Build a project-keyed index based on the orignial solution-keyed index
-// Maybe we should consider build directly a project-keyed index at the first place
-var reverseIndex = (index) => {
-    var projects = {};
-
-    // Pass 1: Iterate every project in every solution and get some basic information
-    index.solutions.forEach(s => {
-        const sid = path.relative(index.path, s.path);
-
-        // Filter out missing projects
-        s.projects.filter(p => !p.notExist).forEach(p => {
-            const pid = path.relative(index.path, p.path);
-            const name = path.basename(p.path);
-
-            if (!(pid in projects))
-            {
-                // Init project info
-                projects[pid] = {
-                    name: name,
-                    id: pid,
-                    containedBy: [sid],
-                    refers: p.references.map(x => path.relative(index.path, x)),
-                    referedBy: [], // Will fill this infomation in later passes
-                    test: name.toLowerCase().includes("test")
-                }
-            }
-            else {
-                projects[pid].containedBy.push(sid);
-            }
-        })
-    });
-    
-    // Pass 2: fill in referedBy
-
-    return projects;
-}
-
 const index = loadIndex();
 console.log("Index loaded. ");
-
-const rIndex = reverseIndex(index);
-FileProcesser.writeFileSync("./projects.json", rIndex);
-console.log("Reverse index generated and saved to ./projects.json. ");
 
 const QAs = [
     {
@@ -87,11 +46,9 @@ const QAs = [
     },
     {
         question: "How many projects in the repo?",
-        //这里的projects统计的都是从sln文件引入的，还有不少projects是其他csproj refer的还未计算
-        answer: (index, rIndex) => {
-            const testProjectsCount = Object.entries(rIndex).filter(entry => entry[1].test).length;
-
-            return `Total projects:${Object.keys(rIndex).length}, in which ${testProjectsCount} are tests`;
+        answer: (index) => {
+            const testProjectsCount = index.projects.filter(p => p.isTest).length;
+            return `Total projects:${index.projects.length}, in which ${testProjectsCount} are tests`;
         }
     },
     {
@@ -112,8 +69,7 @@ const QAs = [
     {
         question: "How many projects refers to other projects? Which one refers to most projects?",
         answer: (index) => {
-            const projects = Object.entries(rIndex).map(entry => entry[1]);
-            const projectHasRefers = projects.filter(p => p.refers.length > 0);
+            const projectHasRefers = index.projects.filter(p => p.refers.length > 0);
 
             let projectHasMostRefers = projectHasRefers[0];
             projectHasRefers.forEach(p => {
@@ -121,7 +77,7 @@ const QAs = [
                     projectHasMostRefers = p;
                 }
             })
-            return `${projectHasRefers.length} projects refers to other projects, ${projectHasMostRefers.name} at ${projectHasMostRefers.id} refers to most ${projectHasMostRefers.refers.length} projects`;
+            return `${projectHasRefers.length} projects refers to other projects, ${projectHasMostRefers.name} at ${projectHasMostRefers.path} refers to most ${projectHasMostRefers.refers.length} projects`;
         }
     },
     {
@@ -325,7 +281,7 @@ const statics = {}
 
 QAs.slice(0, 4).forEach(qa => {
     console.log(`Q: ${qa.question}`);
-    const answer = qa.answer(index, rIndex);
+    const answer = qa.answer(index);
     console.log(`A: ${answer}`);
     statics[qa.question] = answer;
 });

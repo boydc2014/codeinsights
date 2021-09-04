@@ -107,99 +107,43 @@ const QAs = [
         }
     },
     {
-        question: "How many/What are the single projects (only dependented by others)? ",
+        question: "How many/What are the leaf (only refered by others without refering to any other) projects?",
         answer: (index) => {
-            const projects = index.solutions.flatMap(x => x.projects);
-            const obj = {};
-            projects.forEach((p) => {
-                if (p.references && p.references.length > 0) {
-                    p.references.forEach((r) => {
-                        if (!obj[r]) {
-                            obj[r] = 1;
-                        } else {
-                            obj[r] = obj[r] + 1;
-                        }
-                    })
-                }
+            const projects = index.projects.filter(p => p.refers.length === 0 && p.referedBy.length > 0);
+            return projects.map(p => p.path);
+        }
+    },
+    {
+        question: "How many/What are the alone projects, used by one project except tests project (indicating a possible merge)? ",
+        answer: (index) => {
+            const aloneProjects = index.projects.filter(p => {
+                const nonTestRefered = p.referedBy.filter(x => !(x.toLowerCase().includes("test.csproj") || x.toLowerCase().includes("tests.csproj")));
+                return nonTestRefered.length === 1;
             });
 
-            const singleProjects = projects.filter((p) => {
-                return (!p.references || p.references.length === 0) && !obj[p.path]
-            }).map((s) => s.path);
-            return singleProjects;
-        },
-        skip: true
+            return aloneProjects.map(p => p.path);
+        }
     },
     {
-        question: "How many/What are the alone leafs, alone used by one project except tests project? ",
+        question: "How many/What are the alone and a leaf (indicating high change to merge)?  ",
         answer: (index) => {
-            const projects = index.solutions.flatMap(x => x.projects);
-            //非测试项目
-            const nonTestProjects = projects.filter((p) => {
-                return !p.name.toLowerCase().includes('test');
+            const aloneLeafProjects = index.projects.filter(p => {
+                const nonTestRefered = p.referedBy.filter(x => !(x.toLowerCase().includes("test.csproj") || x.toLowerCase().includes("tests.csproj")));
+                return nonTestRefered.length === 1 && p.refers.length === 0;
             });
-            //被引用的统计
-            const referredStatics = {};
-            //统计所有非测试项目中引用其他项目的情况
-            nonTestProjects.forEach((p) => {
-                if (p.references && p.references.length > 0) {
-                    p.references.forEach((r) => {
-                        if (!referredStatics[r]) {
-                            referredStatics[r] = 1;
-                        } else {
-                            referredStatics[r] = referredStatics[r] + 1;
-                        }
-                    })
-                }
-            });
-            //被引用一次的项目
-            const projectsReferredOnce = Object.keys(referredStatics).filter((key) => referredStatics[key] === 1);
-            //被引用一次且不引用其他项目 且目前还存在
-            const aloneProjects = projectsReferredOnce.filter((p) => {
-                const index = nonTestProjects.findIndex((ntp) => ntp.path === p);
-                if (index === -1) return true;
-                return (!nonTestProjects[index].references || nonTestProjects[index].references.length === 0)
-            }).filter(p => {
-                return FileProcesser.existsSync(p); //一些引用的项目已经不存在了
-            });
-            //测试发现目前这样的项目都已经不存在了
-            return aloneProjects;
-        },
-        skip: true
+
+            return aloneLeafProjects.map(p => p.path);
+        }
     },
     {
-        question: "How many/What are the proxy node, used by one and use one ",
+        question: "How many/What are the proxy projects, used by one and use one ",
         answer: (index) => {
-            const projects = index.solutions.flatMap(x => x.projects);
-            //非测试项目
-            const nonTestProjects = projects.filter((p) => {
-                return !p.name.toLowerCase().includes('test');
+            const proxyProjects = index.projects.filter(p => {
+                const nonTestRefered = p.referedBy.filter(x => !(x.toLowerCase().includes("test.csproj") || x.toLowerCase().includes("tests.csproj")));
+                return nonTestRefered.length === 1 && p.refers.length === 1;
             });
-            //被引用的统计
-            const referredStatics = {};
-            //统计所有非测试项目中引用其他项目的情况
-            nonTestProjects.forEach((p) => {
-                if (p.references && p.references.length > 0) {
-                    p.references.forEach((r) => {
-                        if (!referredStatics[r]) {
-                            referredStatics[r] = 1;
-                        } else {
-                            referredStatics[r] = referredStatics[r] + 1;
-                        }
-                    })
-                }
-            });
-            //被引用一次的项目
-            const projectsReferredOnce = Object.keys(referredStatics).filter((key) => referredStatics[key] === 1);
-            //被引用一次且只引用一个项目 且目前还存在
-            const proxyProjects = projectsReferredOnce.filter((p) => {
-                const index = nonTestProjects.findIndex((ntp) => ntp.path === p);
-                if (index === -1) return false;
-                return (nonTestProjects[index].references && nonTestProjects[index].references.length === 1)
-            });
-            return proxyProjects;
-        },
-        skip: true
+            return proxyProjects.map(p => p.path);
+        }
     },
     {
         question: "How many projects havn't been updated in last 0.5 years?",

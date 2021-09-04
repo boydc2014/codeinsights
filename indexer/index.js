@@ -1,14 +1,23 @@
 const { SolutionIndexer } = require('./SolutionIndexer');
 const { ProjectIndexer } = require('./ProjectIndexer');
 const { FileProcesser } = require('../utils/fileUtil');
+const { path } = require('../utils/pathUtil');
 
 const index = (rootDir) => {
   const indexJson = {
-    name: "Intercom",
+    name: path.basename(rootDir),
     path: rootDir,
-    solutions: []
+    solutions: [],
+    projects: []
   }
 
+  const slnFiles = FileProcesser.glob(rootDir, ".sln");
+  indexJson.solutions = slnFiles.map(slnFile => SolutionIndexer.index(slnFile));
+
+  const projFiles = FileProcesser.glob(rootDir, ".csproj");
+  indexJson.projects = projFiles.map(projFile => ProjectIndexer.index(projFile));
+
+  /*
   const slnFiles = SolutionIndexer.getSlnFiles(rootDir);
   console.log(`${slnFiles.length} solution files found`);
 
@@ -64,6 +73,7 @@ const index = (rootDir) => {
       //}
     }
   }
+  */
   return indexJson;
 }
 

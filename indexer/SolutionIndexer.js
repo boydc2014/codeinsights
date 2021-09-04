@@ -10,29 +10,21 @@ const projectTypes = {
 
 class SolutionIndexer {
 
-  getSlnFiles = (rootDir) => {
-    const slnFiles = [];
-    const getFiles = (rootDir, slnFiles) => {
-      const files = FileProcesser.readdirSync(rootDir);
-      files.forEach((f) => {
-        const filePath = path.resolve(rootDir, f);
-        const fileStat = FileProcesser.statSync(filePath);
-        if (fileStat.isDirectory()) {
-          getFiles(filePath, slnFiles);
-        } else if (f.endsWith('.sln')) {
-          slnFiles.push({
-            name: f,
-            path: filePath,
-          });
-        }
-      });
+  index = (solutionFilePath) => {
+    
+    let solutionIndex = {
+      name: path.basename(solutionFilePath),
+      path: solutionFilePath,
+      // We only need projects' path
+      projects: this._getProjectsFromSlnFile(solutionFilePath).map(p => p.path) 
     }
-    getFiles(rootDir, slnFiles);
-    return slnFiles;
+
+    return solutionIndex;
   }
 
-
-  getProjectsFromSlnFile = (slnFile) => {
+  // Reuse this method, but mark it as private
+  // SolutionIndexer is not a container for helper method, it is an abstraction that hide certain implementation details
+  _getProjectsFromSlnFile = (slnFile) => {
     const projectDir = path.dirname(slnFile);
     const lines = FileProcesser.readFileLines(slnFile);
     const projectLines = lines.filter((l) => l.startsWith('Project'));

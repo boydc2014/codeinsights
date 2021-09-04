@@ -7,6 +7,9 @@ class ProjectIndexer {
     this.importsCache = {}
   }
 
+  index = (projFilePath) => {
+    return {};
+  }
 
   getPackageReferences = (project, definedProperty) => {
     const packages = [];

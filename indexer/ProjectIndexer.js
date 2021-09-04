@@ -39,10 +39,15 @@ class ProjectIndexer {
       packages: [],
       refers: [],
       referedBy: [],
+      targetFrameworks: []
     }
+
+    const definedProperties = this._getImportsProperties(projPath);
 
     projectIndex.isTest = projectIndex.name.toLowerCase().includes("test.csproj") || projectIndex.name.toLowerCase().includes("tests.csproj");
     projectIndex.refers = this._getProjectReferences(projPath).map(re => path.unify(re));
+    projectIndex.targetFrameworks = this._getTargetFramework(projPath, definedProperties);
+
     return projectIndex;
   }
 
@@ -114,7 +119,14 @@ class ProjectIndexer {
   }
 
 
-  getImportsProperties = (project) => {
+  _getImportsProperties = (projPath) => {
+    const initialProperties = {
+      "IbizaExtensionVersion": "1.4.1.x",
+      "IntercomWebUIVersion": "1.6.20-92600",
+      "IntercomClientWebUIVersion": "1.1.30-107739",
+      "IntercomBotAppTemplatesVersion": "1.3.27-92712",
+    }
+
     let importPaths = [];
     const definedProperty = {}
     const processFile = (filePath) => {
@@ -124,8 +136,8 @@ class ProjectIndexer {
         processFile(im);
       })
     }
-    processFile(project.path);
-    importPaths.unshift(project.path);
+    processFile(projPath);
+    importPaths.unshift(projPath);
     importPaths.forEach((p) => {
       let fileProperties = {};
       if (this.importsCache[p]) {
@@ -136,6 +148,8 @@ class ProjectIndexer {
       }
       Object.assign(definedProperty, fileProperties);
     })
+
+    Object.assign(definedProperty, initialProperties);
     return definedProperty;
   }
 

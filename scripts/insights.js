@@ -83,34 +83,21 @@ const QAs = [
     {
         question: "How many projects are refered by other projects? Which one is refered by the most projects?",
         answer: (index) => {
-            const obj = {};
-            const projects = index.solutions.flatMap(x => x.projects);
-            projects.forEach((p) => {
-                if (p.references && p.references.length > 0) {
-                    p.references.forEach((r) => {
-                        if (!obj[r]) {
-                            obj[r] = 1;
-                        } else {
-                            obj[r] = obj[r] + 1;
-                        }
-                    })
-                }
-            });
-            let mostReferred = -1;
-            let p = null;
-            Object.keys(obj).forEach((k) => {
-                if (obj[k] > mostReferred) {
-                    p = k;
-                    mostReferred = obj[k];
+            const projectHasRefered = index.projects.filter(p => p.referedBy.length > 0);
+
+            let projectHasMostRefered = projectHasRefered[0];
+            projectHasRefered.forEach(p => {
+                if (p.referedBy.length > projectHasMostRefered.referedBy.length) {
+                    projectHasMostRefered = p;
                 }
             })
-            return `${Object.keys(obj).length} projects are refered by other projects, ${p} is referred by the most projects`;
+            return `${projectHasRefered.length} projects refered by other projects, ${projectHasMostRefered.name} at ${projectHasMostRefered.path} refered by most ${projectHasMostRefered.referedBy.length} projects`;
         }
     },
     {
         question: "How many projects are targeting netstandard? (means it must be a lib)",
         answer: (index) => {
-            const projects = index.solutions.flatMap(x => x.projects);
+            const projects = index.projects;
             const targetingNetStandard = projects.filter((p) => {
                 return p.targetFrameworks && p.targetFrameworks.some((f) => {
                     return f.includes('netstandard');
@@ -140,7 +127,8 @@ const QAs = [
                 return (!p.references || p.references.length === 0) && !obj[p.path]
             }).map((s) => s.path);
             return singleProjects;
-        }
+        },
+        skip: true
     },
     {
         question: "How many/What are the alone leafs, alone used by one project except tests project? ",
@@ -176,7 +164,8 @@ const QAs = [
             });
             //测试发现目前这样的项目都已经不存在了
             return aloneProjects;
-        }
+        },
+        skip: true
     },
     {
         question: "How many/What are the proxy node, used by one and use one ",
@@ -209,7 +198,8 @@ const QAs = [
                 return (nonTestProjects[index].references && nonTestProjects[index].references.length === 1)
             });
             return proxyProjects;
-        }
+        },
+        skip: true
     },
     {
         question: "How many projects havn't been updated in last 0.5 years?",
@@ -233,7 +223,8 @@ const QAs = [
                 return dayDiff(now, p.lastUpdateTime) > 183
             }).map((p) => p.path);
             return halfYear
-        }
+        },
+        skip: true
     },
     {
         question: "How many projects havn't been updated in last 1 years?",
@@ -257,7 +248,8 @@ const QAs = [
                 return dayDiff(now, p.lastUpdateTime) > 365
             }).map((p) => p.path);
             return year
-        }
+        },
+        skip: true
     },
     {
         question: "How many/what are the projects only have 1 author in last 2 years?",
@@ -272,14 +264,17 @@ const QAs = [
                 return ProjectIndexer.getRecentAuthor(p, formatDate).length <= 1;
             }).map((p) => p.path);
             return needTransfer;
-        }
+        },
+        skip: true
     }
 ]
 
 
 const statics = {}
 
-QAs.slice(0, 4).forEach(qa => {
+QAs.forEach(qa => {
+    if (qa.skip) return;
+
     console.log(`Q: ${qa.question}`);
     const answer = qa.answer(index);
     console.log(`A: ${answer}`);

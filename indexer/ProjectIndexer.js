@@ -10,19 +10,19 @@ class ProjectIndexer {
   indexProjects(projFilePaths) 
   {
     // First pass, do basic indexing
-    const projectsIndex = projFilePaths.map(projFilePath => this.indexProject(path.unify(projFilePath)));
+    const projectsIndex = projFilePaths.map(projFilePath => {
+      console.log(`\t Indexing ${projFilePath}`)
+      return this.indexProject(path.unify(projFilePath))
+    });
 
-    // Sendcond pass, tries to fill in the referedBy
+    // Second pass, tries to fill in the referedBy
     const projectsIndexMap = Object.fromEntries(projectsIndex.map(x => [x.path, x]));
     
     projectsIndex.forEach(p => {
       p.refers.forEach(re => {
-        if (re in projectsIndexMap)
-        {
+        if (re in projectsIndexMap){
           projectsIndexMap[re].referedBy.push(p.path);
-        }
-        else 
-        {
+        } else {
           console.log(`WARN: ${p.path} referes to an non-existing project ${re}`);
         }
       })
@@ -47,6 +47,10 @@ class ProjectIndexer {
     projectIndex.isTest = projectIndex.name.toLowerCase().includes("test.csproj") || projectIndex.name.toLowerCase().includes("tests.csproj");
     projectIndex.refers = this._getProjectReferences(projPath).map(re => path.unify(re));
     projectIndex.targetFrameworks = this._getTargetFramework(projPath, definedProperties);
+    
+    const { authors, lastUpdateTime } = this._getProjectGitInfo(projPath);
+    projectIndex.authors = authors;
+    projectIndex.lastUpdateTime = lastUpdateTime;
 
     return projectIndex;
   }
@@ -243,11 +247,11 @@ class ProjectIndexer {
     return { fileCount: projectFiles.length, lineCount };
   }
 
-  getProjectGitInfo = (project) => {
+  _getProjectGitInfo = (projPath) => {
     //search for authors cmd may not work in Unix/Linux
-    let authors = execSync(`cd ${path.dirname(project.path)} && git log --pretty=format:"%an%x09" . | sort /unique`).toString().trim();
+    let authors = execSync(`cd ${path.dirname(projPath)} && git log --pretty=format:"%an%x09" . | sort /unique`).toString().trim();
     authors = authors.split('\t\r\n')
-    const lastUpdateTime = this.formatDate(execSync(`cd ${path.dirname(project.path)} && git log -n 1 --pretty=format:%ad .`).toString().trim());
+    const lastUpdateTime = this.formatDate(execSync(`cd ${path.dirname(projPath)} && git log -n 1 --pretty=format:%ad .`).toString().trim());
     return { authors, lastUpdateTime };
   }
 

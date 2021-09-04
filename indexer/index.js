@@ -11,12 +11,22 @@ const index = (rootDir) => {
     projects: []
   }
 
+  console.log("Begin indexing... ")
+  console.time("Time");
+
   const slnFiles = FileProcesser.glob(rootDir, ".sln");
-  indexJson.solutions = slnFiles.map(slnFile => SolutionIndexer.index(slnFile));
+  console.log(`${slnFiles.length} solution files found.`)
+  slnFiles.map(slnFile => {
+    console.log(`\t Indexing ${slnFile}`)
+    indexJson.solutions.push(SolutionIndexer.index(slnFile));
+  });
 
   const projFiles = FileProcesser.glob(rootDir, ".csproj");
+  console.log(`${projFiles.length} project files found.`)
   indexJson.projects = ProjectIndexer.indexProjects(projFiles);
 
+  console.log("Indexing Done.");
+  console.timeEnd("Time");
   /*
   const slnFiles = SolutionIndexer.getSlnFiles(rootDir);
   console.log(`${slnFiles.length} solution files found`);

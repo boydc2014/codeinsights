@@ -14,7 +14,14 @@ const getIndexNames = () => {
     return getSubDirNames(indexesDir).filter(x => x !== "test");
 }
 
-var loadIndex = () => {
+const getDays = (timestamp) => {
+    const parts = timestamp.split('-');
+    return (parts[0] - 1970) * 365 + (parts[1] - 1) * 30 + parts[2] * 1;
+}
+
+const now = ProjectIndexer.formatDate(new Date().getTime());
+
+const loadIndex = () => {
     const indexNames = getIndexNames();
     if (indexNames.length == 0) {
         console.log("No indexes is found at ./indexes, did you forget to run 'node index.js <full path to repo>'? ");
@@ -38,6 +45,9 @@ var loadIndex = () => {
 
 const index = loadIndex();
 console.log("Index loaded. ");
+
+
+
 
 const QAs = [
     {
@@ -125,7 +135,7 @@ const QAs = [
         }
     },
     {
-        question: "How many/What are the alone and a leaf (indicating high change to merge)?  ",
+        question: "How many/What are the alone and a leaf (indicating high chance to merge)?  ",
         answer: (index) => {
             const aloneLeafProjects = index.projects.filter(p => {
                 const nonTestRefered = p.referedBy.filter(x => !(x.toLowerCase().includes("test.csproj") || x.toLowerCase().includes("tests.csproj")));
@@ -148,68 +158,29 @@ const QAs = [
     {
         question: "How many projects havn't been updated in last 0.5 years?",
         answer: (index) => {
-            const dayDiff = (date1, date2) => {
-                date1 = date1.split('-');
-                date2 = date2.split('-');
-                const day1 = (date1[0] - 1970) * 365 + (date1[1] - 1) * 30 + date1[2] * 1
-                const day2 = (date2[0] - 1970) * 365 + (date2[1] - 1) * 30 + date2[2] * 1
-                return day1 - day2;
-            }
-            const projects = index.solutions.flatMap(x => x.projects);
-            const now = ProjectIndexer.formatDate(new Date().getTime());
-            const halfYear = projects.filter((p) => {
-                if (p.notExist) {
-                    return false;
-                }
-                if (!p.lastUpdateTime) {
-                    return false;
-                }
-                return dayDiff(now, p.lastUpdateTime) > 183
+            const results = index.projects.filter((p) => {
+               return getDays(now) - getDays(p.lastUpdateTime) > 182;
             }).map((p) => p.path);
-            return halfYear
-        },
-        skip: true
+            return results;
+        }
     },
     {
         question: "How many projects havn't been updated in last 1 years?",
         answer: (index) => {
-            const dayDiff = (date1, date2) => {
-                date1 = date1.split('-');
-                date2 = date2.split('-');
-                const day1 = (date1[0] - 1970) * 365 + (date1[1] - 1) * 30 + date1[2] * 1
-                const day2 = (date2[0] - 1970) * 365 + (date2[1] - 1) * 30 + date2[2] * 1
-                return day1 - day2;
-            }
-            const projects = index.solutions.flatMap(x => x.projects);
-            const now = ProjectIndexer.formatDate(new Date().getTime());
-            const year = projects.filter((p) => {
-                if (p.notExist) {
-                    return false;
-                }
-                if (!p.lastUpdateTime) {
-                    return false;
-                }
-                return dayDiff(now, p.lastUpdateTime) > 365
-            }).map((p) => p.path);
-            return year
-        },
-        skip: true
+            const results = index.projects.filter((p) => {
+                return getDays(now) - getDays(p.lastUpdateTime) > 365;
+             }).map((p) => p.path);
+             return results;
+        }
     },
     {
         question: "How many/what are the projects only have 1 author in last 2 years?",
         answer: (index) => {
-            const now = new Date();
-            const twoYearAgo = now.setFullYear(now.getFullYear() - 2);
-            const formatDate = ProjectIndexer.formatDate(twoYearAgo);
-            const projects = index.solutions.flatMap(x => x.projects);
-            const needTransfer = projects.filter((p, index) => {
-                console.log(projects.length, index);
-                if (p.notExist) return false;
-                return ProjectIndexer.getRecentAuthor(p, formatDate).length <= 1;
-            }).map((p) => p.path);
-            return needTransfer;
-        },
-        skip: true
+            const results = index.projects.filter((p) => {
+                return getDays(now) - getDays(p.lastUpdateTime) > 2*365;
+             }).map((p) => p.path);
+             return results;
+        }
     }
 ]
 

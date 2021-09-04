@@ -16,7 +16,7 @@ class SolutionIndexer {
       name: path.basename(solutionFilePath),
       path: solutionFilePath,
       // We only need projects' path
-      projects: this._getProjectsFromSlnFile(solutionFilePath).map(p => p.path) 
+      projects: this._getProjectsFromSlnFile(solutionFilePath).map(p => p.path).sort()
     }
 
     return solutionIndex;

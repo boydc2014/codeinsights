@@ -7,8 +7,45 @@ class ProjectIndexer {
     this.importsCache = {}
   }
 
-  index = (projFilePath) => {
-    return {};
+  indexProjects(projFilePaths) 
+  {
+    // First pass, do basic indexing
+    const projectsIndex = projFilePaths.map(projFilePath => this.indexProject(path.unify(projFilePath)));
+
+    // Sendcond pass, tries to fill in the referedBy
+    const projectsIndexMap = Object.fromEntries(projectsIndex.map(x => [x.path, x]));
+    
+    // console.log("Map, ", projectsIndexMap);
+
+    projectsIndex.forEach(p => {
+      p.refers.forEach(re => {
+        if (re in projectsIndexMap)
+        {
+          projectsIndexMap[re].referedBy.push(p.path);
+        }
+        else 
+        {
+          console.log(`WARN: ${p.path} referes to an non-existing project ${re}`);
+        }
+      })
+    })
+
+    return Object.entries(projectsIndexMap).map(entry => entry[1]);
+  }
+
+  indexProject = (projPath) => {
+    let projectIndex = {
+      name: path.basename(projPath),
+      path: projPath,
+      isTest: false,
+      packages: [],
+      refers: [],
+      referedBy: [],
+    }
+
+    projectIndex.isTest = projectIndex.name.toLowerCase().includes("test");
+    projectIndex.refers = this._getProjectReferences(projPath).map(re => path.unify(re));
+    return projectIndex;
   }
 
   getPackageReferences = (project, definedProperty) => {
@@ -51,17 +88,18 @@ class ProjectIndexer {
     return packages;
   }
 
-  getProjectReferences = (project) => {
-    const lines = FileProcesser.readFileLines(project.path).map((l) => l.trim());
+  _getProjectReferences = (projPath) => {
+    const lines = FileProcesser.readFileLines(projPath).map((l) => l.trim());
     const projectReferenceLines = lines.filter((l) => l.startsWith('<ProjectReference'));
     const projectReferences = projectReferenceLines.map((l) => {
-      return path.resolve(project.path, l.split('"')[1]);
+      // NOTE: the project reference's relative location is based on the dir, not the csproj file itself
+      return path.resolve(path.dirname(projPath), l.split('"')[1]);  
     })
     return projectReferences;
   }
 
-  getTargetFramework = (project, definedProperty) => {
-    const lines = FileProcesser.readFileLines(project.path).map((l) => l.trim());
+  _getTargetFramework = (projPath, definedProperty) => {
+    const lines = FileProcesser.readFileLines(projPath).map((l) => l.trim());
     const projectTargetFrameworks = lines.filter((l) => l.startsWith('<TargetFramework>'));
     const targetFrameworks = projectTargetFrameworks.map((l) => {
       const s = l.indexOf('>');

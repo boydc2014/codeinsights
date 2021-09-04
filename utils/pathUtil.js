@@ -31,6 +31,10 @@ class PathHandler {
   normalize(param) {
     return path.normalize(param).replace(/\\/g, '/');
   }
+
+  unify(fullPath) {
+    return this.dirname(fullPath).toLowerCase() + "/" + this.basename(fullPath);
+  }
 }
 
 module.exports = {

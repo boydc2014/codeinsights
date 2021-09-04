@@ -15,7 +15,7 @@ const index = (rootDir) => {
   indexJson.solutions = slnFiles.map(slnFile => SolutionIndexer.index(slnFile));
 
   const projFiles = FileProcesser.glob(rootDir, ".csproj");
-  indexJson.projects = projFiles.map(projFile => ProjectIndexer.index(projFile));
+  indexJson.projects = ProjectIndexer.indexProjects(projFiles);
 
   /*
   const slnFiles = SolutionIndexer.getSlnFiles(rootDir);

@@ -2,28 +2,33 @@ const { FileProcesser } = require('../utils/fileUtil');
 const { parse } = require('./pathParser');
 const { path } = require('../utils/pathUtil');
 const execSync = require('child_process').execSync;
+const fs = require('fs');
+
+const buildDefPath = "/Build/onebranch/generated/buddy.yml";
+
 class ProjectIndexer {
-  constructor() {
+  constructor(rootDir) {
     this.importsCache = {}
+    this.rootDir = rootDir;
+    this.buildDef = fs.readFileSync(path.resolve(rootDir, buildDefPath), "utf-8").toLowerCase(); 
   }
 
   indexProjects(projFilePaths) 
   {
     // First pass, do basic indexing
     const projectsIndex = projFilePaths.map(projFilePath => {
-      console.log(`\t Indexing ${projFilePath}`)
+      console.log(`\t Indexing ${path.relative(this.rootDir, projFilePath)}`)
       return this.indexProject(path.unify(projFilePath))
     });
 
     // Second pass, tries to fill in the referedBy
     const projectsIndexMap = Object.fromEntries(projectsIndex.map(x => [x.path, x]));
-    
     projectsIndex.forEach(p => {
       p.refers.forEach(re => {
         if (re in projectsIndexMap){
           projectsIndexMap[re].referedBy.push(p.path);
         } else {
-          console.log(`WARN: ${p.path} referes to an non-existing project ${re}`);
+          console.log(`[WARN]: project ${p.path} refers non-existing project ${re}`);
         }
       })
     })
@@ -35,22 +40,33 @@ class ProjectIndexer {
     let projectIndex = {
       name: path.basename(projPath),
       path: projPath,
+      relativePath: path.relative(this.rootDir, projPath),
       isTest: false,
+      inBuild: false,
       packages: [],
+      containedBy: [],
       refers: [],
       referedBy: [],
-      targetFrameworks: []
+      targetFrameworks: [],
+      fileCount: 0,
+      lineCount: 0
     }
 
-    const definedProperties = this._getImportsProperties(projPath);
-
     projectIndex.isTest = projectIndex.name.toLowerCase().includes("test.csproj") || projectIndex.name.toLowerCase().includes("tests.csproj");
+    // project are refered with relative path in build def, and seperator is \ instead of /
+    projectIndex.inBuild = this.buildDef.includes(projectIndex.relativePath.replace(/\//g, '\\').toLowerCase());
     projectIndex.refers = this._getProjectReferences(projPath).map(re => path.unify(re));
+
+    const definedProperties = this._getImportsProperties(projPath);
     projectIndex.targetFrameworks = this._getTargetFramework(projPath, definedProperties);
     
     const { authors, lastUpdateTime } = this._getProjectGitInfo(projPath);
     projectIndex.authors = authors;
     projectIndex.lastUpdateTime = lastUpdateTime;
+
+    const { fileCount, lineCount } = this._getProjectFiles(projPath);
+    projectIndex.fileCount = fileCount;
+    projectIndex.lineCount = lineCount;
 
     return projectIndex;
   }
@@ -222,29 +238,14 @@ class ProjectIndexer {
     return properties;
   }
 
-  getProjectFiles = (project) => {
-    const projectFiles = [];
+  _getProjectFiles = (projPath) => {
+    const csFiles = FileProcesser.glob(path.dirname(projPath), ".cs");
     let lineCount = 0;
-    const getFiles = (rootDir) => {
-      const files = FileProcesser.readdirSync(rootDir);
-      files.forEach((f) => {
-        const filePath = path.resolve(rootDir, f);
-        const fileStat = FileProcesser.statSync(filePath);
-        if (fileStat.isDirectory()) {
-          getFiles(filePath);
-        } else if (filePath !== project.path) { // .csproj file should not be counted
-          const lines = FileProcesser.readFileLines(filePath);
-          lineCount += lines.length;
-          projectFiles.push({
-            name: f,
-            path: filePath,
-          });
-        }
-      });
-    }
-    getFiles(path.dirname(project.path));
-
-    return { fileCount: projectFiles.length, lineCount };
+    csFiles.forEach(csFile => {
+      const lines = FileProcesser.readFileLines(csFile);
+      lineCount += lines.length;
+    });
+    return { fileCount: csFiles.length, lineCount };
   }
 
   _getProjectGitInfo = (projPath) => {
@@ -275,12 +276,8 @@ class ProjectIndexer {
 
     return [year, month, day].join('-');
   }
-
 }
 
-
-
-
 module.exports = {
-  ProjectIndexer: new ProjectIndexer(),
+  ProjectIndexer: ProjectIndexer
 }

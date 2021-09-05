@@ -117,14 +117,21 @@ const QAs = [
         }
     },
     {
-        question: "How many/What are the leaf (only refered by others without refering to any other) projects?",
+        question: "How many/What are the leaf projects?",
         answer: (index) => {
             const projects = index.projects.filter(p => p.refers.length === 0 && p.referedBy.length > 0);
             return projects.map(p => p.path);
         }
     },
     {
-        question: "How many/What are the alone projects, used by one project except tests project (indicating a possible merge)? ",
+        question: "How many/What are the standalone projects?",
+        answer: (index) => {
+            const projects = index.projects.filter(p => p.refers.length === 0 && p.referedBy.length == 0);
+            return projects.map(p => p.path);
+        }
+    },
+    {
+        question: "How many/What are the projects are only used by one project except tests project (indicating a possible merge)? ",
         answer: (index) => {
             const aloneProjects = index.projects.filter(p => {
                 const nonTestRefered = p.referedBy.filter(x => !(x.toLowerCase().includes("test.csproj") || x.toLowerCase().includes("tests.csproj")));

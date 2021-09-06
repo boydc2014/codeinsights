@@ -6,6 +6,20 @@ const fs = require('fs');
 
 const buildDefPath = "/Build/onebranch/generated/buddy.yml";
 
+const formatDate = (date) => {
+  var d = new Date(date),
+    month = '' + (d.getMonth() + 1),
+    day = '' + d.getDate(),
+    year = d.getFullYear();
+
+  if (month.length < 2)
+    month = '0' + month;
+  if (day.length < 2)
+    day = '0' + day;
+
+  return [year, month, day].join('-');
+}
+
 class ProjectIndexer {
   constructor(rootDir) {
     this.importsCache = {}
@@ -252,7 +266,7 @@ class ProjectIndexer {
     //search for authors cmd may not work in Unix/Linux
     let authors = execSync(`cd ${path.dirname(projPath)} && git log --pretty=format:"%an%x09" . | sort /unique`).toString().trim();
     authors = authors.split('\t\r\n')
-    const lastUpdateTime = this.formatDate(execSync(`cd ${path.dirname(projPath)} && git log -n 1 --pretty=format:%ad .`).toString().trim());
+    const lastUpdateTime = formatDate(execSync(`cd ${path.dirname(projPath)} && git log -n 1 --pretty=format:%ad .`).toString().trim());
     return { authors, lastUpdateTime };
   }
 
@@ -262,22 +276,11 @@ class ProjectIndexer {
     authors = authors.split('\t\r\n')
     return authors;
   }
-
-  formatDate(date) {
-    var d = new Date(date),
-      month = '' + (d.getMonth() + 1),
-      day = '' + d.getDate(),
-      year = d.getFullYear();
-
-    if (month.length < 2)
-      month = '0' + month;
-    if (day.length < 2)
-      day = '0' + day;
-
-    return [year, month, day].join('-');
-  }
 }
 
+
+
 module.exports = {
-  ProjectIndexer: ProjectIndexer
+  ProjectIndexer: ProjectIndexer,
+  formatDate: formatDate,
 }

@@ -1,3 +1,3 @@
-cd to the project root directory  
-
-node index.js {absolute path to the directory containing sln files}
+- node index.js <full_path_to_repo> // to index the repo, make sure you have git intalled
+- npm run insights // to see some analyis result
+- npm run report // upcomming soon

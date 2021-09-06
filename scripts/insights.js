@@ -2,7 +2,7 @@ const { path } = require('../utils/pathUtil');
 const fs = require('fs');
 const { exit } = require('process');
 const { FileProcesser } = require('../utils/fileUtil');
-const { ProjectIndexer } = require('../indexer/ProjectIndexer');
+const { ProjectIndexer, formatDate } = require('../indexer/ProjectIndexer');
 
 const indexesDir = path.join(__dirname, '..', 'indexes');
 
@@ -19,7 +19,7 @@ const getDays = (timestamp) => {
     return (parts[0] - 1970) * 365 + (parts[1] - 1) * 30 + parts[2] * 1;
 }
 
-const now = ProjectIndexer.formatDate(new Date().getTime());
+const now = formatDate(new Date().getTime());
 
 const loadIndex = () => {
     const indexNames = getIndexNames();
@@ -185,6 +185,15 @@ const QAs = [
         answer: (index) => {
             const results = index.projects.filter((p) => {
                 return getDays(now) - getDays(p.lastUpdateTime) > 2*365;
+             }).map((p) => p.path);
+             return results;
+        }
+    },
+    {
+        question: "How many/what are the projects not included in solutions?",
+        answer: (index) => {
+            const results = index.projects.filter((p) => {
+                return p.containedBy.length == 0
              }).map((p) => p.path);
              return results;
         }

@@ -14,6 +14,6 @@ index(rootDir).then((data) => {
   FileProcesser.mkDirSync(`./indexes/${hash}`)
   FileProcesser.writeFileSync(`./indexes/${hash}/repo.json`, data);
   console.log(`json data write to: ${__dirname}\\indexes\\${hash}\\repo.json`);
-  FileProcesser.writeFileSync(`./webView/src/data/${hash}.json`, data);
+  FileProcesser.writeFileSync(`./webView/src/data/repo.json`, data);
 });
 

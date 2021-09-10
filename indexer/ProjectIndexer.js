@@ -57,11 +57,7 @@ class ProjectIndexer {
     return Object.entries(projectsIndexMap).map(entry => entry[1]);
   }
 
-<<<<<<< Updated upstream
-  indexProject = (projPath) => {
-=======
   indexProject = async (projPath) => {
->>>>>>> Stashed changes
     let projectIndex = {
       name: path.basename(projPath),
       path: projPath,

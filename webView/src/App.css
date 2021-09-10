@@ -1,0 +1,37 @@
+.App {
+  display: flex;
+  text-align: center;
+}
+
+.App-header {
+  width: 100%;
+  background-color: #282c34;
+  min-height: 10vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+  overflow: hidden;
+}
+
+.Main {
+  width: 100%;
+}
+
+.graph {
+  width: calc(100vw - 400px);
+}
+
+.InfoPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.Info{
+ text-align: left;
+ padding-left: 5px;
+ width: 400px;
+ word-wrap:break-word;
+}

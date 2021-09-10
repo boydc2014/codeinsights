@@ -1,5 +1,6 @@
 const { promisify } = require('util');
 const { FileProcesser } = require('../utils/fileUtil');
+const { throttlePromises } = require('../utils/throttlePromises');
 const { parse } = require('./pathParser');
 const { path } = require('../utils/pathUtil');
 const execSync = require('child_process').execSync;
@@ -31,16 +32,12 @@ class ProjectIndexer {
 
   indexProjects = async (projFilePaths) => {
     // First pass, do basic indexing
-    // const projectsIndex = projFilePaths.map(projFilePath => {
-    //   console.log(`\t Indexing ${path.relative(this.rootDir, projFilePath)}`);
-    //   return this.indexProject(path.unify(projFilePath))
-    // });
     let projectsIndex = new Array(projFilePaths.length).fill(undefined);
     for (let i = 0; i < projFilePaths.length; i++) {
       console.log(`\t Indexing ${path.relative(this.rootDir, projFilePaths[i])}`);
-      projectsIndex[i] = this.indexProject(path.unify(projFilePaths[i]))
+      projectsIndex[i] = () => this.indexProject(path.unify(projFilePaths[i]))
     }
-    projectsIndex = await Promise.all(projectsIndex);
+    projectsIndex = await throttlePromises(projectsIndex);
 
     // Second pass, tries to fill in the referedBy
     const projectsIndexMap = Object.fromEntries(projectsIndex.map(x => [x.path, x]));
@@ -49,7 +46,7 @@ class ProjectIndexer {
         if (re in projectsIndexMap) {
           projectsIndexMap[re].referedBy.push(p.path);
         } else {
-          //console.log(`[WARN]: project ${p.path} refers non-existing project ${re}`);
+          console.log(`[WARN]: project ${p.path} refers non-existing project ${re}`);
         }
       })
     })

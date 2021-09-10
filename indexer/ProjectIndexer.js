@@ -50,7 +50,6 @@ class ProjectIndexer {
   }
 
   indexProject = (projPath) => {
-    console.log(projPath)
     let projectIndex = {
       name: path.basename(projPath),
       path: projPath,
@@ -253,7 +252,7 @@ class ProjectIndexer {
   }
 
   _getProjectFiles = (projPath) => {
-    const csFiles = FileProcesser.glob(path.dirname(projPath), ".cs");
+    const csFiles = FileProcesser.glob(path.dirname(projPath), ".cs").filter(f => !f.toLowerCase().includes('assemblyinfo.cs'));
     let lineCount = 0;
     csFiles.forEach(csFile => {
       const lines = FileProcesser.readFileLines(csFile);

@@ -40,7 +40,7 @@ class FileProcesser {
   }
 
   mkDirSync = (path) => {
-    if (!fs.existsSync(path)) {
+    if (!fs.existsSync(path, { recursive: true })) {
       fs.mkdirSync(path);
     }
   }

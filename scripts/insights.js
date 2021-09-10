@@ -2,7 +2,7 @@ const { path } = require('../utils/pathUtil');
 const fs = require('fs');
 const { exit } = require('process');
 const { FileProcesser } = require('../utils/fileUtil');
-const { ProjectIndexer, formatDate } = require('../indexer/ProjectIndexer');
+const { formatDate } = require('../indexer/ProjectIndexer');
 
 const indexesDir = path.join(__dirname, '..', 'indexes');
 
@@ -166,7 +166,7 @@ const QAs = [
         question: "How many projects havn't been updated in last 0.5 years?",
         answer: (index) => {
             const results = index.projects.filter((p) => {
-               return getDays(now) - getDays(p.lastUpdateTime) > 182;
+                return getDays(now) - getDays(p.lastUpdateTime) > 182;
             }).map((p) => p.path);
             return results;
         }
@@ -176,17 +176,17 @@ const QAs = [
         answer: (index) => {
             const results = index.projects.filter((p) => {
                 return getDays(now) - getDays(p.lastUpdateTime) > 365;
-             }).map((p) => p.path);
-             return results;
+            }).map((p) => p.path);
+            return results;
         }
     },
     {
         question: "How many/what are the projects only have 1 author in last 2 years?",
         answer: (index) => {
             const results = index.projects.filter((p) => {
-                return getDays(now) - getDays(p.lastUpdateTime) > 2*365;
-             }).map((p) => p.path);
-             return results;
+                return getDays(now) - getDays(p.lastUpdateTime) > 2 * 365;
+            }).map((p) => p.path);
+            return results;
         }
     },
     {
@@ -194,8 +194,8 @@ const QAs = [
         answer: (index) => {
             const results = index.projects.filter((p) => {
                 return p.containedBy.length == 0
-             }).map((p) => p.path);
-             return results;
+            }).map((p) => p.path);
+            return results;
         }
     }
 ]
@@ -205,7 +205,6 @@ const statics = {}
 
 QAs.forEach(qa => {
     if (qa.skip) return;
-
     console.log(`Q: ${qa.question}`);
     const answer = qa.answer(index);
     console.log(`A: ${answer}`);

@@ -24,11 +24,10 @@ class ProjectIndexer {
   constructor(rootDir) {
     this.importsCache = {}
     this.rootDir = rootDir;
-    this.buildDef = fs.readFileSync(path.resolve(rootDir, buildDefPath), "utf-8").toLowerCase(); 
+    this.buildDef = fs.readFileSync(path.resolve(rootDir, buildDefPath), "utf-8").toLowerCase();
   }
 
-  indexProjects(projFilePaths) 
-  {
+  indexProjects(projFilePaths) {
     // First pass, do basic indexing
     const projectsIndex = projFilePaths.map(projFilePath => {
       console.log(`\t Indexing ${path.relative(this.rootDir, projFilePath)}`)
@@ -39,7 +38,7 @@ class ProjectIndexer {
     const projectsIndexMap = Object.fromEntries(projectsIndex.map(x => [x.path, x]));
     projectsIndex.forEach(p => {
       p.refers.forEach(re => {
-        if (re in projectsIndexMap){
+        if (re in projectsIndexMap) {
           projectsIndexMap[re].referedBy.push(p.path);
         } else {
           console.log(`[WARN]: project ${p.path} refers non-existing project ${re}`);
@@ -51,6 +50,7 @@ class ProjectIndexer {
   }
 
   indexProject = (projPath) => {
+    console.log(projPath)
     let projectIndex = {
       name: path.basename(projPath),
       path: projPath,
@@ -73,7 +73,7 @@ class ProjectIndexer {
 
     const definedProperties = this._getImportsProperties(projPath);
     projectIndex.targetFrameworks = this._getTargetFramework(projPath, definedProperties);
-    
+
     const { authors, lastUpdateTime } = this._getProjectGitInfo(projPath);
     projectIndex.authors = authors;
     projectIndex.lastUpdateTime = lastUpdateTime;
@@ -130,7 +130,7 @@ class ProjectIndexer {
     const projectReferenceLines = lines.filter((l) => l.startsWith('<ProjectReference'));
     const projectReferences = projectReferenceLines.map((l) => {
       // NOTE: the project reference's relative location is based on the dir, not the csproj file itself
-      return path.resolve(path.dirname(projPath), l.split('"')[1]);  
+      return path.resolve(path.dirname(projPath), l.split('"')[1]);
     })
     return projectReferences;
   }

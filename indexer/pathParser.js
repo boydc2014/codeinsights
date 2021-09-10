@@ -36,12 +36,6 @@ const getEnvironmentVariable = (name, currentFilePath) => {
         variable += '/';
       }
       break;
-    case "MSBuildToolsVersion":
-      variable = "$(MSBuildToolsVersion)";
-      break;
-    case "MSBuildExtensionsPath":
-      variable = "$(MSBuildExtensionsPath)";
-      break;
     case "USERPROFILE":
       variable = process.env.HOME || process.env.USERPROFILE;
       break;

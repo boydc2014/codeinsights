@@ -3,6 +3,37 @@
     "path": "c:/intercom",
     "solutions": [
         {
+            "name": "TestBot.sln",
+            "path": "Intercom/Testbot.sln",
+            "projects": [
+                {
+                    "name": "TestBot",
+                    "path": "TestBot.csproj",
+                    "type": "csProject",
+                    "packages": [
+                        {
+                            "name": "Microsoft.ApplicationInsights",
+                            "version": "1.0.0"
+                        }
+                    ],
+                    "references": [
+                        {
+                            "path": "Intercom/Intercom.helpser.csproj"
+                        }
+                    ],
+                    "lastUpdateTime": "20210816",
+                    "authors": [
+                        "Zhixiang",
+                        "Dong"
+                    ],
+                    "fileCount": "200",
+                    "lineCount": "20000",
+                    "targetFrameworks": [
+                        "netframework4.8",
+                        "netcore3.1"
+                    ]
+                }
+            ]
         }
     ]
 }

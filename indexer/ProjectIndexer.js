@@ -1,7 +1,9 @@
+const { promisify } = require('util');
 const { FileProcesser } = require('../utils/fileUtil');
 const { parse } = require('./pathParser');
 const { path } = require('../utils/pathUtil');
 const execSync = require('child_process').execSync;
+const exec = promisify(require('child_process').exec);
 const fs = require('fs');
 
 const buildDefPath = "/Build/onebranch/generated/buddy.yml";
@@ -27,12 +29,18 @@ class ProjectIndexer {
     this.buildDef = fs.readFileSync(path.resolve(rootDir, buildDefPath), "utf-8").toLowerCase();
   }
 
-  indexProjects(projFilePaths) {
+  indexProjects = async (projFilePaths) => {
     // First pass, do basic indexing
-    const projectsIndex = projFilePaths.map(projFilePath => {
-      console.log(`\t Indexing ${path.relative(this.rootDir, projFilePath)}`)
-      return this.indexProject(path.unify(projFilePath))
-    });
+    // const projectsIndex = projFilePaths.map(projFilePath => {
+    //   console.log(`\t Indexing ${path.relative(this.rootDir, projFilePath)}`);
+    //   return this.indexProject(path.unify(projFilePath))
+    // });
+    let projectsIndex = new Array(projFilePaths.length).fill(undefined);
+    for (let i = 0; i < projFilePaths.length; i++) {
+      console.log(`\t Indexing ${path.relative(this.rootDir, projFilePaths[i])}`);
+      projectsIndex[i] = this.indexProject(path.unify(projFilePaths[i]))
+    }
+    projectsIndex = await Promise.all(projectsIndex);
 
     // Second pass, tries to fill in the referedBy
     const projectsIndexMap = Object.fromEntries(projectsIndex.map(x => [x.path, x]));
@@ -41,7 +49,7 @@ class ProjectIndexer {
         if (re in projectsIndexMap) {
           projectsIndexMap[re].referedBy.push(p.path);
         } else {
-          console.log(`[WARN]: project ${p.path} refers non-existing project ${re}`);
+          //console.log(`[WARN]: project ${p.path} refers non-existing project ${re}`);
         }
       })
     })
@@ -49,7 +57,11 @@ class ProjectIndexer {
     return Object.entries(projectsIndexMap).map(entry => entry[1]);
   }
 
+<<<<<<< Updated upstream
   indexProject = (projPath) => {
+=======
+  indexProject = async (projPath) => {
+>>>>>>> Stashed changes
     let projectIndex = {
       name: path.basename(projPath),
       path: projPath,
@@ -73,13 +85,15 @@ class ProjectIndexer {
     const definedProperties = this._getImportsProperties(projPath);
     projectIndex.targetFrameworks = this._getTargetFramework(projPath, definedProperties);
 
-    const { authors, lastUpdateTime } = this._getProjectGitInfo(projPath);
-    projectIndex.authors = authors;
-    projectIndex.lastUpdateTime = lastUpdateTime;
-
     const { fileCount, lineCount } = this._getProjectFiles(projPath);
     projectIndex.fileCount = fileCount;
     projectIndex.lineCount = lineCount;
+
+    const { authors, lastUpdateTime } = await this._getProjectGitInfo(projPath);
+    projectIndex.authors = authors;
+    projectIndex.lastUpdateTime = lastUpdateTime;
+
+
 
     return projectIndex;
   }
@@ -261,12 +275,11 @@ class ProjectIndexer {
     return { fileCount: csFiles.length, lineCount };
   }
 
-  _getProjectGitInfo = (projPath) => {
+  _getProjectGitInfo = async (projPath) => {
     //search for authors cmd may not work in Unix/Linux
-    let authors = execSync(`cd ${path.dirname(projPath)} && git log --pretty=format:"%an%x09" . | sort /unique`).toString().trim();
-    authors = authors.split('\t\r\n')
-    const lastUpdateTime = formatDate(execSync(`cd ${path.dirname(projPath)} && git log -n 1 --pretty=format:%ad .`).toString().trim());
-    return { authors, lastUpdateTime };
+    const authors = (await exec(`cd ${path.dirname(projPath)} && git log --pretty=format:"%an%x09" . | sort /unique`)).stdout.toString().trim();
+    const lastUpdateTime = (await exec(`cd ${path.dirname(projPath)} && git log -n 1 --pretty=format:%ad .`)).stdout.toString().trim();
+    return { authors: authors.split('\t\r\n'), lastUpdateTime: formatDate(lastUpdateTime) };
   }
 
   //sinceDate format: 20201231

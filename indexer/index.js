@@ -3,7 +3,7 @@ const { ProjectIndexer } = require('./ProjectIndexer');
 const { FileProcesser } = require('../utils/fileUtil');
 const { path } = require('../utils/pathUtil');
 
-const index = (rootDir) => {
+const index = async (rootDir) => {
   const indexJson = {
     name: path.basename(rootDir),
     path: rootDir,
@@ -26,7 +26,7 @@ const index = (rootDir) => {
   projectIndexer = new ProjectIndexer(rootDir);
   const projFiles = FileProcesser.glob(rootDir, ".csproj");
   console.log(`${projFiles.length} project files found.`)
-  indexJson.projects = projectIndexer.indexProjects(projFiles);
+  indexJson.projects = await projectIndexer.indexProjects(projFiles);
 
   // CrossIndex solutions <-> projects at end
   indexJson.solutions.forEach(solution => {

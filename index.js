@@ -4,7 +4,7 @@ const { path } = require('./utils/pathUtil');
 
 
 if (!process.argv[2]) {
-  throw Error('format: node index.js {absolute project path}');
+  throw Error('Usage: node index.js <absolute path to source repo>');
 }
 const rootDir = path.normalize(process.argv[2]);
 index(rootDir).then((data) => {

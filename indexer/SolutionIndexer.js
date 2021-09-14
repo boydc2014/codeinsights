@@ -1,7 +1,6 @@
 const { FileProcesser } = require('../utils/fileUtil');
 const { path } = require('../utils/pathUtil');
 
-
 const projectTypes = {
   "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}": "csharp",
   "{9A19103F-16F7-4668-BE54-9A1E7A4F7556}": "csharp",
@@ -11,7 +10,6 @@ const projectTypes = {
 class SolutionIndexer {
 
   index = (solutionFilePath) => {
-    
     let solutionIndex = {
       name: path.basename(solutionFilePath),
       path: solutionFilePath,
@@ -22,8 +20,6 @@ class SolutionIndexer {
     return solutionIndex;
   }
 
-  // Reuse this method, but mark it as private
-  // SolutionIndexer is not a container for helper method, it is an abstraction that hide certain implementation details
   _getProjectsFromSlnFile = (slnFile) => {
     const projectDir = path.dirname(slnFile);
     const lines = FileProcesser.readFileLines(slnFile);
@@ -43,7 +39,6 @@ class SolutionIndexer {
           // type: projectTypes[projectDescription[1]] || 'unknown',
         });
       }
-
     })
     return projects;
   }

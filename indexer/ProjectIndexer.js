@@ -39,7 +39,7 @@ class ProjectIndexer {
     }
     projectsIndex = await throttlePromises(projectsIndex);
 
-    // Second pass, tries to fill in the referedBy
+    // Second pass, try to fill in the referedBy
     const projectsIndexMap = Object.fromEntries(projectsIndex.map(x => [x.path, x]));
     projectsIndex.forEach(p => {
       p.refers.forEach(re => {
@@ -51,6 +51,24 @@ class ProjectIndexer {
       })
     })
 
+    // Third pass, try to find project referenced in build in-directly
+    projectsIndex.forEach(p => {
+      if (p.inBuild != 'no') {
+        let dependencies = [...p.refers];
+        while (dependencies.length !== 0)
+        {
+          const head = dependencies.shift();
+          if (head in projectsIndexMap) {
+            dependencies = [...dependencies, ...projectsIndexMap[head].refers]
+
+            if (projectsIndexMap[head].inBuild == 'no') {
+              projectsIndexMap[head].inBuild = 'inDirect';
+            }
+          }
+        }
+      }
+    })
+
     return Object.entries(projectsIndexMap).map(entry => entry[1]);
   }
 
@@ -60,7 +78,7 @@ class ProjectIndexer {
       path: projPath,
       relativePath: path.relative(this.rootDir, projPath),
       isTest: false,
-      inBuild: false,
+      inBuild: 'no',
       packages: [],
       containedBy: [],
       refers: [],
@@ -72,7 +90,9 @@ class ProjectIndexer {
 
     projectIndex.isTest = projectIndex.name.toLowerCase().includes("test.csproj") || projectIndex.name.toLowerCase().includes("tests.csproj");
     // project are refered with relative path in build def, and seperator is \ instead of /
-    projectIndex.inBuild = this.buildDef.includes(projectIndex.relativePath.replace(/\//g, '\\').toLowerCase());
+    if (this.buildDef.includes(projectIndex.relativePath.replace(/\//g, '\\').toLowerCase())) {
+      projectIndex.inBuild = 'direct';
+    }
     projectIndex.refers = this._getProjectReferences(projPath).map(re => path.unify(re));
 
     const definedProperties = this._getImportsProperties(projPath);

@@ -197,6 +197,15 @@ const QAs = [
             }).map((p) => p.path);
             return results;
         }
+    },
+    {
+        question: "How many/what are the projects not included in build?",
+        answer: (index) => {
+            const results = index.projects.filter((p) => {
+                return p.inBuild == 'no'
+            }).map((p) => p.path);
+            return results;
+        }
     }
 ]
 

@@ -3,17 +3,21 @@
  * base on
  * https://github.com/uid11/full-git-history/blob/master/src/full-git-history.js
  */
-//  const REPO_PATH = '/Users/zhixzhan/ABS/Intercom';
- const REPO_PATH = './';
- const BRANCH_NAME = 'master';
- const SINCE_DATE = '2021-10-10';
- const OUTPUT_FILEPATH = './git-log-6.json';
-
 
 'use strict'; /* globals process */
 
 const createFile = require('fs').createWriteStream,
       execFile = require('child_process').execFile;
+
+
+const getTodayDate = () => {
+  const today= new Date();
+  return `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`
+}
+
+const REPO_PATH = '/Users/zhixzhan/ABS/Intercom';
+const SINCE_DATE = '2021-10-1';
+const OUTPUT_FILEPATH = `./git-log-${SINCE_DATE}-${getTodayDate()}.json`;
 
 /**
  * Throws when got error.
@@ -41,7 +45,7 @@ const SEPARATOR = '\n'.repeat(32);
 // ${BRANCH_NAME} ${SINCE_DATE ? "--since=\'"+SINCE_DATE+"\'" : ""}
 const GIT_PARAMS = {
   commits:
-    (`rev-list ${BRANCH_NAME} --since=2021-10-01 --use-bitmap-index
+    (`rev-list HEAD --since=${SINCE_DATE} --use-bitmap-index
     --sparse --pretty=tformat:%P%n%T%n%an%n%ae%n%aI%n%cn%n` +
     `%ce%n%cI%n%G?%n%GS%n%GK%n%e%n%gD%n%gn%n%ge%n%gs%n%D%n%B` +
     SEPARATOR.replace(/\s/g, '%n')).split(/\s+/)
@@ -101,12 +105,6 @@ const fullGitHistory = (args, callback = defaultCallback) => {
 
   const options = parseArgs(args);
   let closed = false;
-
-  if (options.usage) {
-    console.log(`usage: full-git-history [<path>] [-o <path>] [-no] [-r]
-       full-git-history path/to/foo -o path/to/foo-history.json`);
-    return;
-  }
 
   /**
    * General handler for all errors.

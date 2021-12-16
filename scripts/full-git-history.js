@@ -4,19 +4,19 @@
  * https://github.com/uid11/full-git-history/blob/master/src/full-git-history.js
  */
 
-'use strict'; /* globals process */
+"use strict"; /* globals process */
 
-const createFile = require('fs').createWriteStream,
-      execFile = require('child_process').execFile;
-
+const createFile = require("fs").createWriteStream,
+  execFile = require("child_process").execFile;
 
 const getTodayDate = () => {
-  const today= new Date();
-  return `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`
-}
+  const today = new Date();
+  return `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+};
 
-const REPO_PATH = '/Users/zhixzhan/ABS/Intercom';
-const SINCE_DATE = '2021-10-1';
+// change to your code path, pull latest main before run this script
+const REPO_PATH = "/Users/zhixzhan/ABS/Intercom";
+const SINCE_DATE = "2021-1-1";
 const OUTPUT_FILEPATH = `./git-log-${SINCE_DATE}-${getTodayDate()}.json`;
 
 /**
@@ -24,51 +24,52 @@ const OUTPUT_FILEPATH = `./git-log-${SINCE_DATE}-${getTodayDate()}.json`;
  * @param  {?Error} error
  * @throws {Error}
  */
-const defaultCallback = error => {
+const defaultCallback = (error) => {
   if (error) throw error;
 };
 
-const KB = 1024, MB = 1024 * KB,
-      EXEC_OPTIONS = {
-        maxBuffer: 4096 * MB,
-        encoding: 'buffer'
-      },
-      MAX_OUT_SIZE = 160 * MB,
-      MAX_REF_SIZE = 1 * KB,
-      MAX_OUT_REFS = Math.round(MAX_OUT_SIZE / MAX_REF_SIZE),
-      TOLERANCE_SIZE = 8 * MB;
+const KB = 1024,
+  MB = 1024 * KB,
+  EXEC_OPTIONS = {
+    maxBuffer: 4096 * MB,
+    encoding: "buffer",
+  },
+  MAX_OUT_SIZE = 160 * MB,
+  MAX_REF_SIZE = 1 * KB,
+  MAX_OUT_REFS = Math.round(MAX_OUT_SIZE / MAX_REF_SIZE),
+  TOLERANCE_SIZE = 8 * MB;
 
-const REFS = ['heads', 'tags'],
-      FULL_REFS = REFS.map(key => `refs/${key}/`);
+const REFS = ["heads", "tags"],
+  FULL_REFS = REFS.map((key) => `refs/${key}/`);
 
-const SEPARATOR = '\n'.repeat(32);
+const SEPARATOR = "\n".repeat(32);
 // ${BRANCH_NAME} ${SINCE_DATE ? "--since=\'"+SINCE_DATE+"\'" : ""}
 const GIT_PARAMS = {
-  commits:
-    (`rev-list HEAD --since=${SINCE_DATE} --use-bitmap-index
+  commits: (
+    `rev-list HEAD --since=${SINCE_DATE} --use-bitmap-index
     --sparse --pretty=tformat:%P%n%T%n%an%n%ae%n%aI%n%cn%n` +
     `%ce%n%cI%n%G?%n%GS%n%GK%n%e%n%gD%n%gn%n%ge%n%gs%n%D%n%B` +
-    SEPARATOR.replace(/\s/g, '%n')).split(/\s+/)
+    SEPARATOR.replace(/\s/g, "%n")
+  ).split(/\s+/),
 };
 
 const SOURCES = Object.keys(GIT_PARAMS),
-      hasOwn  = GIT_PARAMS.hasOwnProperty;
+  hasOwn = GIT_PARAMS.hasOwnProperty;
 
 /**
  * Parse string arguments from command line.
  * @param  {string[]} args
  * @return {Object} Options object with output filename, path to repository.
  */
-const parseArgs = args => {
-  const options = { out: 'history.json', path: '.' };
+const parseArgs = (args) => {
+  const options = { out: "history.json", path: "." };
   for (const arg of args) {
-
-    if (arg === '-no') {
+    if (arg === "-no") {
       options.no = true;
       continue;
     }
 
-    if (arg === '-r') {
+    if (arg === "-r") {
       options.r = true;
       continue;
     }
@@ -79,7 +80,7 @@ const parseArgs = args => {
       continue;
     }
 
-    if (arg === '-o') {
+    if (arg === "-o") {
       options.afterO = true;
       continue;
     }
@@ -102,7 +103,6 @@ const parseArgs = args => {
  * @param {function(Error=,Object=)} cb for when the writting is finished.
  */
 const fullGitHistory = (args, callback = defaultCallback) => {
-
   const options = parseArgs(args);
   let closed = false;
 
@@ -110,7 +110,7 @@ const fullGitHistory = (args, callback = defaultCallback) => {
    * General handler for all errors.
    * @param {Error=}
    */
-  const errorHandler = error => {
+  const errorHandler = (error) => {
     if (closed || !error) return;
     closed = true;
 
@@ -124,9 +124,11 @@ const fullGitHistory = (args, callback = defaultCallback) => {
   let execsCount = SOURCES.length;
 
   for (const source of SOURCES) {
-    execs[source] = execFile('git',
-      ['-C', REPO_PATH].concat(GIT_PARAMS[source]),
-      EXEC_OPTIONS, errorHandler
+    execs[source] = execFile(
+      "git",
+      ["-C", REPO_PATH].concat(GIT_PARAMS[source]),
+      EXEC_OPTIONS,
+      errorHandler
     );
   }
 
@@ -154,19 +156,20 @@ const fullGitHistory = (args, callback = defaultCallback) => {
       for (let i = 0, l = commitsBuffer.length; i < l; ++i)
         refs.commits[refs.commits.length] = commitsBuffer[i];
     }
-    separator = ',';
+    separator = ",";
     commitsBuffer.length = 0;
   };
 
   const refs = {},
-        OUTPUT_REFS = refs.REFS = {},
-        MAYBE_REFS = {};
+    OUTPUT_REFS = (refs.REFS = {}),
+    MAYBE_REFS = {};
 
   if (options.r) refs.commits = [];
   for (const ref of REFS) refs[ref] = {};
 
-  const snip = {}, parse = {};
-  for (const source of SOURCES) snip[source] = '';
+  const snip = {},
+    parse = {};
+  for (const source of SOURCES) snip[source] = "";
 
   /**
    * Parse git references from text to JSON.
@@ -175,18 +178,17 @@ const fullGitHistory = (args, callback = defaultCallback) => {
    */
   parse.refs = (data, isEnd) => {
     const refsList = (snip.refs + data).split(SEPARATOR);
-    snip.refs = isEnd ? '' : refsList.pop();
+    snip.refs = isEnd ? "" : refsList.pop();
 
-    let lines, ref, reftype, refname, remote, i,
-        j, email, obj, base;
+    let lines, ref, reftype, refname, remote, i, j, email, obj, base;
     const len = refsList.length;
 
     for (j = 0; j < len; ++j) {
       ref = refsList[j].trim();
 
-      if (ref === '') continue;
+      if (ref === "") continue;
 
-      lines = ref.split('\n');
+      lines = ref.split("\n");
 
       if (lines.length < 4) {
         console.error(`Wrong ref format:\n${ref}\n`);
@@ -196,7 +198,7 @@ const fullGitHistory = (args, callback = defaultCallback) => {
       obj = {
         sha1: lines[0],
         type: lines[2],
-        size: parseInt(lines[3])
+        size: parseInt(lines[3]),
       };
       reftype = undefined;
       refname = lines[1];
@@ -208,21 +210,20 @@ const fullGitHistory = (args, callback = defaultCallback) => {
           break;
         }
       }
-      if (refname === 'refs/stash') reftype = refname = 'stash';
+      if (refname === "refs/stash") reftype = refname = "stash";
 
       if (!reftype) {
         console.error(`Unknown reftype (${refname}) in ref:\n${ref}\n`);
         continue;
       }
 
-      if (reftype === 'remotes') {
-
-        i = refname.indexOf('/');
+      if (reftype === "remotes") {
+        i = refname.indexOf("/");
         if (i < 1) {
           console.error(`Wrong refname (${refname}) in ref:\n${ref}\n`);
           continue;
         }
-        remote  = refname.slice(0,  i);
+        remote = refname.slice(0, i);
         refname = refname.slice(i + 1);
 
         if (hasOwn.call(refs.remotes, remote)) {
@@ -230,8 +231,7 @@ const fullGitHistory = (args, callback = defaultCallback) => {
         } else {
           base = refs.remotes[remote] = {};
         }
-
-      } else if (reftype === 'stash') {
+      } else if (reftype === "stash") {
         base = refs;
       } else {
         base = refs[reftype];
@@ -244,11 +244,11 @@ const fullGitHistory = (args, callback = defaultCallback) => {
 
       base[refname] = obj;
 
-      if (lines[ 9]) obj.upstream = lines[9];
+      if (lines[9]) obj.upstream = lines[9];
       if (lines[10]) obj.push = lines[10];
-      if (lines[11] === '*') obj.HEAD = true;
+      if (lines[11] === "*") obj.HEAD = true;
 
-      if (obj.type !== 'tag') continue;
+      if (obj.type !== "tag") continue;
 
       if (lines.length < 9) {
         console.error(`Wrong tag format:\n${ref}\n`);
@@ -256,16 +256,16 @@ const fullGitHistory = (args, callback = defaultCallback) => {
       }
 
       email = lines[7];
-      if (email[0] === '<' && email.slice(-1) === '>') {
+      if (email[0] === "<" && email.slice(-1) === ">") {
         email = email.slice(1, -1);
       }
       obj.objecttype = lines[4];
       obj.object = lines[5];
       obj.tagger = {
         user: { name: lines[6], email },
-        date: lines[8]
+        date: lines[8],
       };
-      obj.message = lines.slice(12).join('\n');
+      obj.message = lines.slice(12).join("\n");
     }
   };
 
@@ -276,17 +276,17 @@ const fullGitHistory = (args, callback = defaultCallback) => {
    */
   parse.commits = (data, isEnd) => {
     const commits = (snip.commits + data).split(SEPARATOR);
-    snip.commits = isEnd ? '' : commits.pop();
+    snip.commits = isEnd ? "" : commits.pop();
 
     let commit, lines, i, obj;
     const len = commits.length;
 
     for (i = 0; i < len; ++i) {
       commit = commits[i].trim();
-      
-      if (commit === '') continue;
 
-      lines = commit.split('\n');
+      if (commit === "") continue;
+
+      lines = commit.split("\n");
 
       if (lines.length < 10) {
         console.error(`Wrong commit format:\n${commit}\n`);
@@ -295,23 +295,23 @@ const fullGitHistory = (args, callback = defaultCallback) => {
 
       obj = {
         sha1: lines[0].slice(7),
-        parents: lines[1] ? lines[1].split(' ') : [],
+        parents: lines[1] ? lines[1].split(" ") : [],
         tree: lines[2],
         author: {
           user: { name: lines[3], email: lines[4] },
-          date: lines[5]
+          date: lines[5],
         },
         committer: {
           user: { name: lines[6], email: lines[7] },
-          date: lines[8]
+          date: lines[8],
         },
-        message: lines.slice(18).join('\n')
+        message: lines.slice(18).join("\n"),
       };
 
-      if (lines[9] !== 'N') {
+      if (lines[9] !== "N") {
         obj.GPG = { type: lines[9] };
         if (lines[10]) obj.GPG.name = lines[10];
-        if (lines[11]) obj.GPG.key  = lines[11];
+        if (lines[11]) obj.GPG.key = lines[11];
       }
 
       if (lines[12]) obj.encoding = lines[12];
@@ -335,18 +335,16 @@ const fullGitHistory = (args, callback = defaultCallback) => {
    * @param {Object} commit Commit object for writing.
    */
   const parseRefNames = (str, commit) => {
-    for (const ref of str.split(', ')) {
+    for (const ref of str.split(", ")) {
+      const parts = ref.split(" "),
+        name = parts[parts.length - 1];
 
-      const parts = ref.split(' '),
-            name = parts[parts.length - 1];
-
-      switch(parts.length) {
+      switch (parts.length) {
         case 1:
           (commit.refs = commit.refs || []).push(name);
 
           if (/^[A-Z_]+$/.test(name)) {
-            const refCommits =
-              MAYBE_REFS[name] = MAYBE_REFS[name] || {};
+            const refCommits = (MAYBE_REFS[name] = MAYBE_REFS[name] || {});
 
             if (commit.sha1 in refCommits) {
               console.error(`duplicate commit for refname '${ref}'.`);
@@ -354,16 +352,16 @@ const fullGitHistory = (args, callback = defaultCallback) => {
             }
             refCommits[commit.sha1] = true;
           }
-        break;
+          break;
         case 2:
-          if (parts[0] !== 'tag:') {
+          if (parts[0] !== "tag:") {
             console.error(`wrong tag name format: '${ref}'.`);
             continue;
           }
           (commit.tags = commit.tags || []).push(name);
-        break;
+          break;
         case 3:
-          if (parts[1] !== '->') {
+          if (parts[1] !== "->") {
             console.error(`wrong branch name format: '${ref}'.`);
             continue;
           }
@@ -373,7 +371,7 @@ const fullGitHistory = (args, callback = defaultCallback) => {
             continue;
           }
           OUTPUT_REFS[parts[0]] = name;
-        break;
+          break;
         default:
           console.error(`wrong ref name format: '${ref}'.`);
       }
@@ -384,11 +382,9 @@ const fullGitHistory = (args, callback = defaultCallback) => {
    * Mix MAYBE_REFS to OUTPUT_REFS.
    */
   const mixREFS = () => {
-    LOOK_UP_REFS:
-    for (const ref in MAYBE_REFS) {
-
+    LOOK_UP_REFS: for (const ref in MAYBE_REFS) {
       const branch = refs.heads[ref] && refs.heads[ref].sha1,
-            commits = MAYBE_REFS[ref];
+        commits = MAYBE_REFS[ref];
 
       if (branch) {
         if (!commits[branch]) {
@@ -400,13 +396,15 @@ const fullGitHistory = (args, callback = defaultCallback) => {
       let REF;
       for (const sha1 in commits) {
         if (!commits[sha1]) continue;
-        commits[REF = sha1] = false;
+        commits[(REF = sha1)] = false;
         break;
       }
       if (ref in OUTPUT_REFS) {
         if (REF) {
-          console.error(`refname '${ref}' is ambiguous:` +
-            `\n ${OUTPUT_REFS[ref]}\n ${REF}\n`);
+          console.error(
+            `refname '${ref}' is ambiguous:` +
+              `\n ${OUTPUT_REFS[ref]}\n ${REF}\n`
+          );
           continue;
         }
         REF = OUTPUT_REFS[ref];
@@ -431,35 +429,36 @@ const fullGitHistory = (args, callback = defaultCallback) => {
    */
   var output;
   let outCount = -1;
-  const outParts = OUTPUT_FILEPATH.split('.'),
-        outExt  = outParts.length > 1 ? '.' + outParts.pop() : '',
-        outName = outParts.join('.');
+  const outParts = OUTPUT_FILEPATH.split("."),
+    outExt = outParts.length > 1 ? "." + outParts.pop() : "",
+    outName = outParts.join(".");
 
   /**
    * Get name for next output file.
    * @return {string} Filename.
    */
   const getNextFileName = () =>
-    outName + (++outCount ? '-' + outCount : '') + outExt;
+    outName + (++outCount ? "-" + outCount : "") + outExt;
 
   /**
    * Open next output file for writing.
    * @param {number} dataSize Starting data size.
    */
-  const openNextFile  = dataSize => {
+  const openNextFile = (dataSize) => {
     outSize = dataSize;
-    separator = '';
+    separator = "";
 
-    if (output) output
-      .removeListener('drain', write)
-      .removeListener('error', errorHandler)
-      .end(']}');
+    if (output)
+      output
+        .removeListener("drain", write)
+        .removeListener("error", errorHandler)
+        .end("]}");
 
     output = createFile(getNextFileName())
-      .on('error', errorHandler)
-      .on('drain', write);
+      .on("error", errorHandler)
+      .on("drain", write);
 
-    canWrite = output.write('[');
+    canWrite = output.write("[");
   };
 
   if (!options.no) openNextFile(0);
@@ -470,7 +469,7 @@ const fullGitHistory = (args, callback = defaultCallback) => {
    * @param  {function} reject
    * @return {function} Node-type callback.
    */
-  const promiseCallback = (resolve, reject) => error => {
+  const promiseCallback = (resolve, reject) => (error) => {
     if (error) {
       reject(error);
     } else {
@@ -478,21 +477,17 @@ const fullGitHistory = (args, callback = defaultCallback) => {
     }
   };
 
-
   /**
    * Write JSON to next output file.
    * @param  {Object} json Data for writing.
    * @return {Promise} Write promise.
    */
-  const writeJSON = json => {
+  const writeJSON = (json) => {
     if (options.no) return Promise.resolve();
     const file = createFile(getNextFileName());
 
     return new Promise((resolve, reject) => {
-      file.end(
-        JSON.stringify(json), 'utf8',
-        promiseCallback(resolve, reject)
-      );
+      file.end(JSON.stringify(json), "utf8", promiseCallback(resolve, reject));
     });
   };
 
@@ -502,14 +497,15 @@ const fullGitHistory = (args, callback = defaultCallback) => {
    */
   const writeSeparateRefs = () => {
     const proms = [],
-          keys = Object.keys(refs.tags),
-          len = keys.length;
+      keys = Object.keys(refs.tags),
+      len = keys.length;
     let i = Math.round(
-          (TOLERANCE_SIZE + MAX_OUT_SIZE - outSize)/MAX_REF_SIZE
-        ),
-        j = 0, tags = {};
+        (TOLERANCE_SIZE + MAX_OUT_SIZE - outSize) / MAX_REF_SIZE
+      ),
+      j = 0,
+      tags = {};
 
-    for(; i < len; ++i, ++j) {
+    for (; i < len; ++i, ++j) {
       const key = keys[i];
 
       tags[key] = refs.tags[key];
@@ -517,7 +513,7 @@ const fullGitHistory = (args, callback = defaultCallback) => {
 
       if (j === MAX_OUT_REFS) {
         proms.push(writeJSON({ tags }));
-        j = 0, tags = {};
+        (j = 0), (tags = {});
       }
     }
     if (Object.keys(tags).length) proms.push(writeJSON({ tags }));
@@ -535,39 +531,35 @@ const fullGitHistory = (args, callback = defaultCallback) => {
     mixREFS();
     const proms = writeSeparateRefs();
 
-    proms.push(output ?
-      new Promise((resolve, reject) => {
-        output
-          .removeListener('drain', write)
-          .removeListener('error', errorHandler)
-          .end(
-            ']', 'utf8',
-            promiseCallback(resolve, reject)
-          );
-      }) :
-      Promise.resolve()
+    proms.push(
+      output
+        ? new Promise((resolve, reject) => {
+            output
+              .removeListener("drain", write)
+              .removeListener("error", errorHandler)
+              .end("]", "utf8", promiseCallback(resolve, reject));
+          })
+        : Promise.resolve()
     );
 
     Promise.all(proms).then(
-      options.r ?
-        () => callback(null, refs) : () => callback(),
-      error => callback(error)
+      options.r ? () => callback(null, refs) : () => callback(),
+      (error) => callback(error)
     );
   };
 
   for (const source of SOURCES) {
-    execs[source].on('close', () => {
-      parse[source]('', true);
+    execs[source].on("close", () => {
+      parse[source]("", true);
       close();
     });
 
-    execs[source].stderr.on('data', data => {
+    execs[source].stderr.on("data", (data) => {
       console.error(`Error with reading ${source}:\n${data}\n`);
     });
 
-    execs[source].stdout.on('data', parse[source]);
+    execs[source].stdout.on("data", parse[source]);
   }
-
 };
 
 module.exports = fullGitHistory;
